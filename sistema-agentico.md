@@ -13,10 +13,16 @@
 | **Workers ×N** | `local-worker` | DeepSeek-R1-0528-Qwen3-8B (razonamiento R1) | 4,6 GB | 16k | Tareas acotadas delegadas; hasta 4 en paralelo sobre UNA carga |
 | **Utility** | `local-fast` | Qwen3-8B | 4,6 GB | 24k | Commits, resúmenes, clasificar (legado; el worker R1 puede absorberlo) |
 | **Coder titular** | `local-coder` | Qwen3-Coder-30B-A3B (MoE) | 17,2 GB | **32k** (bajado de 48k: es el que petó el 02/08) | Sesiones de código — perfil CODE, por swap |
-| **Auditor titular** | `cloud-coder` | GLM-5.2 (OpenRouter) | 0 GB | 1M | Revisión por defecto: otro laboratorio, no ocupa RAM |
+| **Auditor titular** | `auditor-free`† | gpt-oss-120b (agy, gratis) → GLM-5.2 si falla | 0 GB | 1M | Revisión por defecto: gratis primero, GLM de red. Validado 3/3 con bugs sembrados (21/08) |
 | **Auditor sensible** | `local-auditor` | gemma-4-E4B-it OptiQ 4bit (Google) | ~4-5 GB | 8k | Datos que no salen del Mac. Familia ≠ Qwen ⇒ cumple "revisor ≠ productor". Carga JIT |
 | **RAG** | `local-embed` | Qwen3-Embedding-0.6B | 0,6 GB | — | Siempre residente |
 | **Visión local** | `local-general` | (el 35B ES el modelo de visión) | — | — | Visión pesada → `cloud-vision` (MiniMax) |
+
+† `auditor-free` es un destino de `enrutador-ia` (no de `litellm.config.yaml`): prueba
+  `agy` (Antigravity CLI, plan gratuito, modelo `gpt-oss-120b-medium`) y si falla —
+  no instalado, `exit≠0` o `status≠SUCCESS` — cae a `cloud-coder` (GLM) como red de
+  seguridad, **siempre avisando** cuál de los dos respondió. Ver `REGLAS_ENRUTAMIENTO.md`
+  de la skill para el detalle completo y la prueba de validación.
 
 **Claves del diseño:**
 - *N workers ≠ N modelos*: LM Studio sirve peticiones concurrentes (PARALLEL=4)
@@ -26,6 +32,10 @@
 - Se evaluó y DESCARTÓ con datos (21/08): sustituir el 35B por Qwen3.8-27B denso
   — sería hasta 5× más lento (denso vs MoE); el 35B-A3B es el mejor orquestador
   posible en 36 GB. El problema real siempre fue el KV cache, no los pesos.
+- **Auditor titular movido a `auditor-free` (21/08):** GLM seguía siendo el mejor
+  candidato de red por fiabilidad y coste ya casi nulo, pero probar gratis primero
+  no cuesta nada si el fallback queda siempre visible — mismo criterio que ya rige
+  todo lo demás en este documento (nada se degrada en silencio).
 
 ## 2. Perfiles (marchas de la caja de cambios — `stack.sh`)
 
