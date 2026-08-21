@@ -118,7 +118,7 @@ Los tres orquestadores-software saben ya delegar solos en la escala v5.4:
 | Orquestador | Mecanismo | Estado |
 |---|---|---|
 | **Claude Code** | skill `enrutador-ia` (`enrutar.sh`) con destinos nuevos `local-worker` y `local-auditor` | ✅ **Testado end-to-end**: worker razonó bien (180 ✓) y el auditor cazó el bug del IVA (0.21→1.21) con relevo automático |
-| **opencode** | Subagentes `@worker` y `@auditor-local` (+ doctrina en AGENTS.md: escala explorador→worker→tú→escalador; revisor cloud vs auditor local). opencode habla DIRECTO con LiteLLM (nunca por `enrutar.sh`) ⇒ necesitó `~/llm-stack/agy-bridge.py` (puente HTTP en `:4010`) para que `@auditor-local` también llegue a `agy` | ✅ Configurado · 🔴 **BLOQUEADO**: la prueba real (invocar `@auditor-local`) causó 2 kernel panics de GPU la noche del 21/08 (ver §5) — no repetir hasta resolver. El smoke por `opencode run` sigue colgándose con modelos pequeños, aparte (limitación documentada el 03/08, no regresión) |
+| **opencode** | Subagente `@worker` (+ doctrina en AGENTS.md). `@auditor-local` **RETIRADO el 22/08** (causa raíz de los panics hallada y resuelta: el harness de opencode no cabe en gemma@8k → tormenta de reintentos y cargas JIT — ver `incidente-panic-gpu.md` §9). Material sensible: SOLO por `enrutar.sh`. Los alias del bridge (`gpt-oss-free`/`gemini-free`/`auditor-free`, cloud vía agy, 0 GPU) se quedan | ✅ Resuelto por rediseño: incidente cerrado sin repetir la prueba peligrosa |
 | **hermes** | SOUL.md §Delegación v5.4 (delega vía `enrutar.sh`) + alias en config.yaml | ✅ Configurado (backups .bak.20260821) · ⏳ validar en sesión real |
 
 Hallazgos del test de delegación:

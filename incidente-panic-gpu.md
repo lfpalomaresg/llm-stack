@@ -210,14 +210,29 @@ antes de que la espiral de contexto se lo comiera.
 - *De Apple:* que ese churn tumbe el kernel en vez de fallar limpio es el bug
   de `IOGPU.kext` (§7) — nosotros solo podemos no pisar su zona de disparo.
 
-**Arreglos candidatos (pendientes de decidir):**
-- a) Subir el contexto de gemma en el relevo (8k → 16k) Y declarar
-  `local-auditor` con su límite real en `opencode.json`.
-- b) Alternativa conservadora: retirar `@auditor-local` de opencode — las
-  auditorías sensibles van solo por `enrutar.sh` (prompts directos pequeños,
-  relevo endurecido, validado) y opencode usa `@revisor` (cloud) para el resto.
-- c) En cualquier caso: límite de reintentos en LiteLLM para errores de
-  contexto (son deterministas — reintentar no arregla nada y alimenta el churn).
+**Arreglo APLICADO (22/08, decisión del operador): (b) + (c).**
+- ✅ **(b) `@auditor-local` retirado de opencode** — `agent/auditor-local.md`
+  → `.retired.20260822-0101` (backup, no borrado) y doctrina de AGENTS.md
+  reescrita: material sensible NO se revisa desde opencode; la auditoría local
+  (gemma) va SOLO por `enrutar.sh` (prompts directos pequeños, relevo
+  endurecido, validado — cazó el bug del IVA). opencode usa `@revisor`
+  (auditor-free/GLM cloud) para lo demás. Razón de descartar (a): habría que
+  pelear DOS problemas (medir si el harness cabe en 16k + el cuelgue documentado
+  de opencode con modelos pequeños del 03/08) para conservar un atajo usado
+  cero veces — regla de las 3 correcciones: a la tercera se replantea el
+  diseño, no se parchea.
+- ✅ **(c) tapa anti-tormenta en LiteLLM**: ya existía `num_retries: 1` (sin
+  fallbacks desde el 02/08); se deja documentado en el propio
+  `litellm.config.yaml` que NO se suba sin releer este incidente (los errores
+  de contexto llegan como APIConnectionError, clase reintentable, pero son
+  deterministas).
+- Los alias del bridge (`gpt-oss-free`/`gemini-free`/`auditor-free`) SE QUEDAN
+  en opencode: van a la nube vía agy, 0 GPU local, 128k+ de contexto — no
+  pueden reproducir ni la tormenta ni el churn.
+- 💡 Opcional a valorar otro día: desactivar el JIT model loading de LM Studio
+  (petición a modelo no cargado → error visible en vez de carga sorpresa de
+  17-20 GB). Encaja con la filosofía "sin fallbacks silenciosos", pero cambia
+  el comportamiento de todos los flujos — decisión de operador, no urgente.
 
 ## 6. Recuperar la sesión de Claude Code tras un reinicio
 

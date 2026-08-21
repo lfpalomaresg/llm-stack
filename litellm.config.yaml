@@ -95,6 +95,11 @@ model_list:
 
 litellm_settings:
   drop_params: true        # tolera params que un backend no soporte
+  # num_retries=1 es también la tapa anti-tormenta (incidente 21/08, ver
+  # incidente-panic-gpu.md §9): los errores de contexto de LM Studio llegan
+  # envueltos como APIConnectionError (clase reintentable) aunque son
+  # DETERMINISTAS — reintentar no arregla nada y alimenta el churn de cargas.
+  # NO subir este valor sin releer ese incidente.
   num_retries: 1
   request_timeout: 600
 
