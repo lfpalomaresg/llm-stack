@@ -920,6 +920,27 @@
         y fiabilidad, no acierto.
       </figcaption>
     </figure>
+
+    <div style="height: 28px"></div>
+    <h3>Auto-delegación en los tres orquestadores (21/08, noche)</h3>
+    <p class="table-note" style="margin-bottom: 16px">
+      El mismo día se montó un worker (razona, no decide) y un auditor local en
+      los tres sitios donde se abre una sesión agéntica — no solo en Claude Code.
+    </p>
+    <div class="rules">
+      <div class="rule">
+        <span class="rule-mark">→</span>
+        <span class="rule-text"><b>Claude Code</b> — <span class="k">enrutar.sh</span> gana dos destinos: <span class="k">local-worker</span> (R1-8B, vía rápida) y <span class="k">local-auditor</span> (Gemma, por relevo con el worker — el guardarraíl no deja que convivan). Testado end-to-end: el worker razona bien, el auditor cazó un bug de IVA sembrado (0.21→1.21).</span>
+      </div>
+      <div class="rule">
+        <span class="rule-mark">→</span>
+        <span class="rule-text"><b>opencode</b> — subagentes <span class="k">@worker</span> y <span class="k">@auditor-local</span> + doctrina de escalado en <span class="k">AGENTS.md</span>. opencode habla DIRECTO con LiteLLM, nunca por <span class="k">enrutar.sh</span> → necesitó su propio puente, <span class="k">agy-bridge.py</span> (HTTP compatible OpenAI en <span class="k">localhost:4010</span>), para que <span class="k">@auditor-local</span> también pudiera llegar a <span class="k">agy</span>. ⚠️ Validación en real pendiente — ver incidente de esta misma noche, abajo.</span>
+      </div>
+      <div class="rule">
+        <span class="rule-mark">→</span>
+        <span class="rule-text"><b>Hermes</b> — <span class="k">SOUL.md §Delegación v5.4</span> + alias nuevos en <span class="k">config.yaml</span> (backups <span class="k">.bak.20260821</span>). Validación en sesión real pendiente (las sesiones abiertas antes del cambio no releen <span class="k">SOUL.md</span>).</span>
+      </div>
+    </div>
   </section>
 
   <!-- ─────────────────────────────────────────────────────── -->
@@ -1010,6 +1031,11 @@
         <div class="tl-what">Auditor titular validado y movido a auditor-free</div>
         <div class="tl-lesson">3 bugs sembrados (IVA, SQLi, off-by-one) contra gpt-oss-120b y GLM: 3/3 en ambos. GLM se queda como red por fiabilidad y ~115× menos overhead de tokens, no por acierto.</div>
       </div>
+      <div class="tl-item">
+        <div class="tl-date">2026-08-21</div>
+        <div class="tl-what">Kernel panic (×2) al validar opencode con el auditor real</div>
+        <div class="tl-lesson">Dos panics de kernel en el driver de GPU (<span class="k">IOGPUFamily</span> / <span class="k">IOGPUGroupMemory</span>, mismo proceso panicado: WindowServer) a las 22:22 y 22:49, ambos justo al invocar <span class="k">@auditor-local</span> de opencode con el stack del perfil AGENTE ya cargado entero. Tras el primer panic LM Studio rechazó recargar el 35B por falta de recursos — el guardarraíl de RAM funcionó — pero el segundo panic llegó igual: la sospecha es presión de memoria unificada de GPU, no solo RAM de proceso, algo que ese guardarraíl no mide. <b>Pendiente: no repetir la prueba real de opencode hasta identificar la causa</b> — la config (<span class="k">agy-bridge.py</span>, alias en <span class="k">litellm.config.yaml</span>) queda lista pero sin validar en vivo.</div>
+      </div>
     </div>
   </section>
 
@@ -1065,7 +1091,7 @@
     <div class="rules">
       <div class="rule">
         <span class="rule-mark">→</span>
-        <span class="rule-text">Sincronizar los techos de contexto declarados en <span class="k">opencode.json</span> (80k/64k) con lo que realmente carga el stack (32k) — hoy están desalineados.</span>
+        <span class="rule-text"><b>Resolver el kernel panic de GPU antes de repetir la prueba real de opencode</b> — dos reinicios forzados la misma noche (22:22 y 22:49) al invocar <span class="k">@auditor-local</span> con el stack ya cargado. Prioridad sobre cualquier otro pendiente de esta lista.</span>
       </div>
       <div class="rule">
         <span class="rule-mark">→</span>
@@ -1086,6 +1112,7 @@
       <div>litellm.config.yaml <span>— alias y enrutado</span></div>
       <div>stack.sh <span>— control de perfiles</span></div>
       <div>mcp-local-models/server.py <span>— MCP nuevo (21/08)</span></div>
+      <div>agy-bridge.py <span>— puente HTTP para opencode → agy (21/08)</span></div>
       <div>enrutador-ia/enrutar.sh <span>— skill privada, fuera de este repo</span></div>
     </div>
   </footer>

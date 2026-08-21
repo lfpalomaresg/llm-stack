@@ -102,8 +102,9 @@ Los techos 32k/16k quedan FIJADOS; subirlos exige repetir esta batería.
 | Fecha | Qué pasó | Lección aplicada |
 |---|---|---|
 | 2026-08-02 | Congelón total: coder a 80k ctx → KV cache devoró la RAM | Techos conservadores; el culpable es el KV, no los pesos |
-| 2026-08-21 | opencode declaraba ctx 80k/64k con modelos cargados a 48k | Sincronizar límites cliente ↔ carga real (pendiente en opencode.json) |
+| 2026-08-21 | opencode declaraba ctx 80k/64k con modelos cargados a 48k | ✅ Resuelto la misma noche: `opencode.json` sincronizado (32k/32k/24k/16k), verificado contra el fichero real |
 | 2026-08-21 | llmfit: top-10 lleno de fine-tunes de aficionado | Solo modelos con editor serio (Qwen, DeepSeek, Google, lmstudio-community) |
+| 2026-08-21 (noche) | **Kernel panic ×2 al validar `@auditor-local` de opencode en real** (22:22 y 22:49, `IOGPUFamily`/`IOGPUGroupMemory`, proceso panicado WindowServer) | 🔴 **No repetir la prueba hasta investigar.** Sospecha: presión de memoria unificada de GPU al añadir `agy-bridge.py` sobre el perfil AGENTE ya cargado entero — el guardarraíl de RAM de LM Studio no cubre esto (saltó tras el 1er panic, no evitó el 2º) |
 
 ## 6. Inventario en disco (nada borrado — decisión operador 21/08)
 
@@ -117,7 +118,7 @@ Los tres orquestadores-software saben ya delegar solos en la escala v5.4:
 | Orquestador | Mecanismo | Estado |
 |---|---|---|
 | **Claude Code** | skill `enrutador-ia` (`enrutar.sh`) con destinos nuevos `local-worker` y `local-auditor` | ✅ **Testado end-to-end**: worker razonó bien (180 ✓) y el auditor cazó el bug del IVA (0.21→1.21) con relevo automático |
-| **opencode** | Subagentes `@worker` y `@auditor-local` (+ doctrina en AGENTS.md: escala explorador→worker→tú→escalador; revisor cloud vs auditor local) | ✅ Configurado · ⏳ validar en sesión real (el smoke por `opencode run` se cuelga con modelos pequeños — limitación YA documentada el 03/08, no es regresión) |
+| **opencode** | Subagentes `@worker` y `@auditor-local` (+ doctrina en AGENTS.md: escala explorador→worker→tú→escalador; revisor cloud vs auditor local). opencode habla DIRECTO con LiteLLM (nunca por `enrutar.sh`) ⇒ necesitó `~/llm-stack/agy-bridge.py` (puente HTTP en `:4010`) para que `@auditor-local` también llegue a `agy` | ✅ Configurado · 🔴 **BLOQUEADO**: la prueba real (invocar `@auditor-local`) causó 2 kernel panics de GPU la noche del 21/08 (ver §5) — no repetir hasta resolver. El smoke por `opencode run` sigue colgándose con modelos pequeños, aparte (limitación documentada el 03/08, no regresión) |
 | **hermes** | SOUL.md §Delegación v5.4 (delega vía `enrutar.sh`) + alias en config.yaml | ✅ Configurado (backups .bak.20260821) · ⏳ validar en sesión real |
 
 Hallazgos del test de delegación:
@@ -134,6 +135,7 @@ Hallazgos del test de delegación:
 - [x] Perfil `agente` en `stack.sh` ✅ 21/08 (además: coder a 32k también en `start`/`daemon`; `stop` descarga el worker; los perfiles con FAST descargan al WORKER y viceversa — nunca 8B+8B)
 - [x] Bajar `local-coder` a 32k en `stack.sh` ✅ 21/08
 - [x] Alias `local-worker` y `local-auditor` en `litellm.config.yaml` ✅ 21/08 (verificados end-to-end)
-- [ ] Corregir límites de contexto en `~/.config/opencode/opencode.json` (declara 80k/64k; lo cargado es 32k) — **pendiente de decidir con el operador** (tocar su config de cliente)
+- [x] Corregir límites de contexto en `~/.config/opencode/opencode.json` ✅ 21/08 noche (32k/32k/24k/16k, verificado contra el fichero real; backup `.bak.20260821-005635`)
+- [ ] 🔴 **PRIORIDAD — investigar y resolver el kernel panic de GPU** (×2, 21/08 noche, `IOGPUFamily`) antes de repetir la prueba real de `@auditor-local` en opencode. No tocar sin plan: la config queda hecha pero sin validar en vivo.
 - [ ] `llmfit bench` contra los modelos cargados (números medidos para contribuir/comparar) — opcional
 - [ ] Una semana de rodaje del perfil AGENTE antes de plantear cualquier borrado (el 27B NO se descargó: descartado con datos antes de gastar disco)

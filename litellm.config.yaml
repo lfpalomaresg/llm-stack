@@ -45,6 +45,29 @@ model_list:
       api_base: http://localhost:1234/v1
       api_key: lm-studio
 
+  # ── GRATIS vía Antigravity CLI (agy-bridge, localhost:4010) ────
+  # agy no tiene modo servidor — agy-bridge.py es un puente HTTP compatible
+  # con OpenAI que lo expone como modelo de verdad (21/08). Necesario para que
+  # opencode (que habla DIRECTO con LiteLLM, nunca por enrutador-ia) también
+  # pueda llegar a estos destinos, no solo Claude Code/hermes vía enrutar.sh.
+  - model_name: gpt-oss-free
+    litellm_params:
+      model: openai/gpt-oss-free
+      api_base: http://localhost:4010/v1
+      api_key: agy-bridge
+
+  - model_name: gemini-free
+    litellm_params:
+      model: openai/gemini-free
+      api_base: http://localhost:4010/v1
+      api_key: agy-bridge
+
+  - model_name: auditor-free
+    litellm_params:
+      model: openai/auditor-free
+      api_base: http://localhost:4010/v1
+      api_key: agy-bridge
+
   # ── CLOUD (OpenRouter, prepago sin auto-recarga) ───────────────
   # Trigger cloud-coder: local falla tests 2x o tarea #critica
   - model_name: cloud-coder

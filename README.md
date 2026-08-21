@@ -55,6 +55,7 @@ máquina necesita reinstalarlo, ver `INSTALL-RGPD.md` de la skill `conclave`.
 | [`stack.sh`](stack.sh) | Control de perfiles de RAM (arrancar/parar/cambiar perfil). |
 | [`lock.sh`](lock.sh) | Lock file para evitar carreras entre perfiles concurrentes. |
 | [`mcp-local-models/`](mcp-local-models/) | MCP server que expone los modelos locales y el catálogo libre de OpenRouter como herramientas para Claude Code. |
+| [`agy-bridge.py`](agy-bridge.py) | Puente HTTP compatible OpenAI (`localhost:4010`) que expone `gemini-free`/`gpt-oss-free`/`auditor-free` como modelos de verdad para clientes que hablan directo con LiteLLM (opencode) y no pasan por `enrutador-ia`. ⚠️ Su prueba real con el agente `@auditor-local` de opencode causó 2 kernel panics de GPU el 21/08 — pendiente de resolver antes de repetir, ver `sistema-agentico.md`. |
 | [`llm-stack-v5.md`](llm-stack-v5.md) | Documento de arquitectura — la fuente de verdad del diseño. |
 | [`sistema-agentico.md`](sistema-agentico.md) | Roles agénticos, perfiles de RAM, resultados de la batería de estrés. |
 | [`llm-stack-conversation.md`](llm-stack-conversation.md) / [`prompt-revision-opus.md`](prompt-revision-opus.md) | Diario de diseño original (agosto 2026) e histórico de revisión externa. |
