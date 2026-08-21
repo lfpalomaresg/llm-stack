@@ -64,7 +64,7 @@ y el siguiente paso es mitigar/reportar, no insistir.
 
 | # | Prueba | Riesgo | Estado | Resultado |
 |---|---|---|---|---|
-| 1 | Buscar el panic string + build de macOS en foros Apple/MLX/LM Studio (¿bug conocido? ¿fix en 26.6?) | Ninguno | ⬜ | |
+| 1 | Buscar el panic string + build de macOS en foros Apple/MLX/LM Studio (¿bug conocido? ¿fix en 26.6?) | Ninguno | ✅ 21/08 | **ES UN BUG CONOCIDO de IOGPU.kext de Apple**, disparado por MLX. Ver §7 |
 | 2 | Inspeccionar si `agy` usa GPU: lanzarlo SOLO (sin stack cargado, `stack.sh stop`) con `sudo powermetrics --samplers gpu_power` o Monitor de Actividad pestaña GPU | Ninguno (sin stack) | ⬜ | |
 | 3 | `agy-bridge.py` + curl manual a `:4010` (SIN opencode) con stack en **LIGERO** (solo 8B) | Bajo | ⬜ | |
 | 4 | Lo mismo con stack en **AGENTE** completo — el bridge solo, sin opencode | Medio | ⬜ | |
@@ -82,6 +82,46 @@ cargado — forzar descarga parcial antes, como ya hace el relevo worker↔audit
   vivo. Documentado en `sistema-agentico.md` §5/§7, `index.html`, README,
   `REGLAS_ENRUTAMIENTO.md` (skill enrutador-ia) y memoria de Claude Code.
 - **Siguiente paso:** peldaño 1 de la escalera.
+
+## 7. Hallazgos del peldaño 1 (2026-08-21 noche) — bug conocido de Apple
+
+**La hipótesis del §3 queda CONFIRMADA por fuentes externas:** es un bug de
+`IOGPU.kext` (el kernel extension de GPU de Apple), no de nuestro código ni de
+LM Studio — pero el patrón de uso de Metal de MLX lo dispara de forma fiable.
+Hay múltiples reportes públicos con los mismos panic strings:
+
+| Fuente | Qué reporta | Coincidencia con nuestro caso |
+|---|---|---|
+| [mlx#3346](https://github.com/ml-explore/mlx/issues/3346) | M3 Ultra, macOS 26.4: 9 panics en 6 días. `IOGPUGroupMemory.cpp:219` "Memory object unexpectedly not found" + `IOGPUMemory.cpp:550` underflow | Mismo fichero fuente y familia de panic que los nuestros (líneas 323/528) |
+| [mlx#3186](https://github.com/ml-explore/mlx/issues/3186) | **M4 Max 36 GB (nuestro hardware exacto)**, macOS 26.3: panic en prefill grande | Mismo chip y RAM |
+| [mlx-lm#883](https://github.com/ml-explore/mlx-lm/issues/883) | `mlx_lm.server`: crecimiento de memoria sin límite → panic | Mismo patrón servidor |
+| [lmstudio-bug-tracker#927](https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues/927) | Cargar un 2º modelo MLX tumba LM Studio | Multi-modelo, nuestro perfil AGENTE |
+
+**Condiciones de disparo documentadas en esos issues — las tres se daban aquí:**
+1. Utilización de memoria GPU > ~80% (nuestro AGENTE: ~25,6 GB de modelos + KV,
+   con el techo wired de GPU por defecto en ~27 GB en un Mac de 36 GB).
+2. Ciclos repetidos de carga/descarga de modelos (nuestro relevo worker↔auditor
+   hace EXACTAMENTE eso).
+3. Varios procesos compitiendo por la GPU (35B + R1 + la invocación nueva).
+
+**Estado del bug:** sin fix confirmado en los issues (afecta al menos a 26.3 y
+26.4; nosotros estamos en 26.5.2 y nos pasó, así que sigue vivo ahí). Sin
+respuesta pública de Apple. Requiere escalado interno de Apple.
+
+**Palancas de mitigación identificadas (aún sin aplicar):**
+- **Actualizar macOS:** hay **26.6.2 disponible** (verificado con
+  `softwareupdate --list` el 21/08). No confirmado que arregle este bug, pero
+  es el peldaño más barato con posibilidad de fix.
+- **`sysctl iogpu.wired_limit_mb`** (ahora a 0 = default ~27 GB en este Mac):
+  fijarlo MÁS BAJO (p. ej. 24576) deja margen de seguridad a WindowServer —
+  los modelos que no quepan fallarán con error visible en vez de panic, que es
+  exactamente nuestra filosofía. Se pierde capacidad total de modelo. No
+  persiste entre reinicios salvo LaunchDaemon.
+- **Reducir la presión estructural del perfil AGENTE** cuando haya un cliente
+  GPU adicional: no validar opencode con el AGENTE completo cargado (relevo
+  previo), y/o bajar techos de contexto.
+- **Reportar a Apple** (Feedback Assistant) con nuestros 2 `panic-full` — suma
+  al escalado interno que piden los issues.
 
 ## 6. Recuperar la sesión de Claude Code tras un reinicio
 
