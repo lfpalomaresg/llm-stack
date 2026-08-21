@@ -1,0 +1,12 @@
+# Entorno virtual (reproducible con requirements.txt, no se versiona)
+.venv/
+
+# Logs — crecen sin límite, no aportan al repo
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store

@@ -1,0 +1,81 @@
+# LLM Stack v5 — LiteLLM proxy config
+# Un solo endpoint (localhost:4000/v1) para opencode, hermes y scripts.
+# Los clientes usan SOLO los alias model_name; cambiar un modelo = editar aquí.
+
+model_list:
+  # ── LOCAL (LM Studio, localhost:1234) ──────────────────────────
+  - model_name: local-coder
+    litellm_params:
+      model: openai/qwen3-coder-30b-a3b-instruct-mlx
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
+  - model_name: local-general
+    litellm_params:
+      model: openai/qwen3.6-35b-a3b
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
+  - model_name: local-fast
+    litellm_params:
+      model: openai/qwen3-8b
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
+  - model_name: local-embed
+    litellm_params:
+      model: openai/text-embedding-qwen3-embedding-0.6b
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
+  # ── Perfil AGENTE (añadido 2026-08-21) ─────────────────────────
+  # Workers ×N con razonamiento R1 (un solo modelo cargado sirve a varios
+  # agentes en paralelo — PARALLEL=4 en LM Studio)
+  - model_name: local-worker
+    litellm_params:
+      model: openai/deepseek/deepseek-r1-0528-qwen3-8b
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
+  # Auditor local para material sensible (familia distinta a Qwen ⇒ cumple
+  # la regla "revisor ≠ productor" de JERARQUIA_IA). Carga JIT, no residente.
+  - model_name: local-auditor
+    litellm_params:
+      model: openai/gemma-4-e4b-it-optiq
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
+  # ── CLOUD (OpenRouter, prepago sin auto-recarga) ───────────────
+  # Trigger cloud-coder: local falla tests 2x o tarea #critica
+  - model_name: cloud-coder
+    litellm_params:
+      model: openrouter/z-ai/glm-5.2          # $0.42/$1.32 por M · 1M ctx · MIT
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Alternativa de escalado ultra-barata (el 80B que no cabe local)
+  - model_name: cloud-coder-next
+    litellm_params:
+      model: openrouter/qwen/qwen3-coder-next  # $0.12/$0.80 por M · 262k ctx
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Trigger: comando explícito tipo /repo-audit (repo entero + logs)
+  - model_name: cloud-megacontext
+    litellm_params:
+      model: openrouter/moonshotai/kimi-k3     # $3/$15 por M · 1M ctx
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Trigger: vídeo / docs visuales que local-general no resuelve
+  - model_name: cloud-vision
+    litellm_params:
+      model: openrouter/minimax/minimax-m3     # $0.30/$1.20 por M · 1M ctx
+      api_key: os.environ/OPENROUTER_API_KEY
+
+litellm_settings:
+  drop_params: true        # tolera params que un backend no soporte
+  num_retries: 1
+  request_timeout: 600
+
+# SIN fallbacks (decisión 2026-08-02): si el modelo pedido no puede cargarse
+# (guardarraíl de LM Studio con otro grande en RAM), el error debe ser VISIBLE
+# — "cambia de perfil con stack.sh" — no una degradación silenciosa al 8B que
+# te hace creer que hablas con el grande.
