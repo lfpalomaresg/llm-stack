@@ -104,7 +104,7 @@ Los techos 32k/16k quedan FIJADOS; subirlos exige repetir esta batería.
 | 2026-08-02 | Congelón total: coder a 80k ctx → KV cache devoró la RAM | Techos conservadores; el culpable es el KV, no los pesos |
 | 2026-08-21 | opencode declaraba ctx 80k/64k con modelos cargados a 48k | ✅ Resuelto la misma noche: `opencode.json` sincronizado (32k/32k/24k/16k), verificado contra el fichero real |
 | 2026-08-21 | llmfit: top-10 lleno de fine-tunes de aficionado | Solo modelos con editor serio (Qwen, DeepSeek, Google, lmstudio-community) |
-| 2026-08-21 (noche) | **Kernel panic ×2 al validar `@auditor-local` de opencode en real** (22:22 y 22:49, `IOGPUFamily`/`IOGPUGroupMemory`, proceso panicado WindowServer) | 🔴 **No repetir la prueba hasta investigar.** Sospecha: presión de memoria unificada de GPU al añadir `agy-bridge.py` sobre el perfil AGENTE ya cargado entero — el guardarraíl de RAM de LM Studio no cubre esto (saltó tras el 1er panic, no evitó el 2º) |
+| 2026-08-21 (noche) | **Kernel panic ×2 al validar `@auditor-local` de opencode en real** (22:22 y 22:49, `IOGPUFamily`/`IOGPUGroupMemory`, proceso panicado WindowServer) | ✅ **RESUELTO 22/08 por rediseño** — causa raíz: harness de opencode > gemma@8k → tormenta de reintentos y cargas JIT sobre la GPU al techo, pisando un bug conocido de `IOGPU.kext`. `@auditor-local` retirado de opencode; sensible solo por `enrutar.sh` (relevo endurecido). Historia completa: `incidente-panic-gpu.md` |
 
 ## 6. Inventario en disco (nada borrado — decisión operador 21/08)
 
@@ -136,6 +136,6 @@ Hallazgos del test de delegación:
 - [x] Bajar `local-coder` a 32k en `stack.sh` ✅ 21/08
 - [x] Alias `local-worker` y `local-auditor` en `litellm.config.yaml` ✅ 21/08 (verificados end-to-end)
 - [x] Corregir límites de contexto en `~/.config/opencode/opencode.json` ✅ 21/08 noche (32k/32k/24k/16k, verificado contra el fichero real; backup `.bak.20260821-005635`)
-- [ ] 🔴 **PRIORIDAD — investigar y resolver el kernel panic de GPU** (×2, 21/08 noche, `IOGPUFamily`) antes de repetir la prueba real de `@auditor-local` en opencode. No tocar sin plan: la config queda hecha pero sin validar en vivo.
+- [x] 🔴 Investigar y resolver el kernel panic de GPU ✅ 22/08 — causa raíz hallada (escalera de 5 peldaños, sin repetir la condición peligrosa) y resuelta por rediseño: `@auditor-local` fuera de opencode, relevo endurecido en `enrutar.sh`, tapa anti-tormenta en LiteLLM. Ver `incidente-panic-gpu.md`.
 - [ ] `llmfit bench` contra los modelos cargados (números medidos para contribuir/comparar) — opcional
 - [ ] Una semana de rodaje del perfil AGENTE antes de plantear cualquier borrado (el 27B NO se descargó: descartado con datos antes de gastar disco)
