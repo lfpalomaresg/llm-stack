@@ -656,7 +656,7 @@
           <tr><th>Alias</th><th>Modelo</th><th>Precio in/out (por M)</th><th>Ctx</th><th>Cuándo entra</th></tr>
         </thead>
         <tbody>
-          <tr><td class="mono">cloud-coder</td><td>z-ai/glm-5.2</td><td class="num">$0,42 / $1,32</td><td class="num">1M</td><td>Auditor por defecto · local falla tests 2×</td></tr>
+          <tr><td class="mono">cloud-coder</td><td>z-ai/glm-5.2</td><td class="num">$0,42 / $1,32</td><td class="num">1M</td><td>Red del auditor · local falla tests 2×</td></tr>
           <tr><td class="mono">cloud-coder-next</td><td>qwen/qwen3-coder-next</td><td class="num">$0,12 / $0,80</td><td class="num">262k</td><td>Escalado barato — el 80B que no cabe local</td></tr>
           <tr><td class="mono">cloud-megacontext</td><td>moonshotai/kimi-k3</td><td class="num">$3 / $15</td><td class="num">1M</td><td>Repo entero + logs → diagnóstico</td></tr>
           <tr><td class="mono">cloud-vision</td><td>minimax/minimax-m3</td><td class="num">$0,30 / $1,20</td><td class="num">1M</td><td>Vídeo / documentos visuales pesados</td></tr>
@@ -664,6 +664,27 @@
       </table>
     </div>
     <p class="table-note">Precios verificados contra la API de OpenRouter el 2026-08-02. Clave leída del almacén de opencode, sin duplicar en <span class="k">.zshrc</span>.</p>
+
+    <div style="height: 28px"></div>
+
+    <h3>Gratis vía Antigravity CLI (<span class="k">agy</span>) — añadido 21/08</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Modelo</th><th>Usado por</th><th>Plan</th><th>Cuándo entra</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">gpt-oss-120b-medium</td><td>destino <span class="mono">gpt-oss-free</span>, <span class="mono">auditor-free</span></td><td class="num">$0/mes</td><td>Primer intento del rol Auditor — pesos abiertos, no toca Codex/ChatGPT</td></tr>
+          <tr><td class="mono">gemini-3.7-flash</td><td>destino <span class="mono">gemini-free</span></td><td class="num">$0/mes</td><td>Primer intento antes de la API de pago de Gemini</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">
+      Plan "For Individuals" de Google Antigravity: completions y comandos ilimitados,
+      con "basic weekly rate limits" (sin cifra publicada). No consume la
+      <span class="k">GEMINI_API_KEY</span> ni ningún crédito de OpenRouter — es un
+      producto y una cuenta gratuita distintos.
+    </p>
   </section>
 
   <!-- ─────────────────────────────────────────────────────── -->
@@ -752,7 +773,7 @@
           <tr><td>Orquestador</td><td class="mono">local-general</td><td class="num">20,4&nbsp;GB</td><td>Siempre que hay orquestación local</td></tr>
           <tr><td>Workers ×N</td><td class="mono">local-worker</td><td class="num">4,6&nbsp;GB</td><td>Tareas acotadas, hasta 4 en paralelo</td></tr>
           <tr><td>Coder titular</td><td class="mono">local-coder</td><td class="num">17,2&nbsp;GB</td><td>Sesiones de código, perfil CODE</td></tr>
-          <tr><td>Auditor titular</td><td class="mono">cloud-coder</td><td class="num">0&nbsp;GB</td><td>Revisión por defecto — otro laboratorio</td></tr>
+          <tr><td>Auditor titular</td><td class="mono">auditor-free</td><td class="num">0&nbsp;GB</td><td>Gratis primero (agy) · GLM de red si falla — 3/3 en la validación</td></tr>
           <tr><td>Auditor sensible</td><td class="mono">local-auditor</td><td class="num">~5&nbsp;GB</td><td>Dato que no sale del Mac — carga JIT</td></tr>
           <tr><td>RAG</td><td class="mono">local-embed</td><td class="num">0,6&nbsp;GB</td><td>Siempre residente</td></tr>
         </tbody>
@@ -785,7 +806,9 @@
         Claude Code ya llegaba a este stack por la skill de siempre. Se le
         añadió un MCP propio (<span class="k">local-models</span>, registrado
         a nivel de usuario) con tres herramientas — dos gobernadas por el
-        mismo LiteLLM, una que sale directo a OpenRouter.
+        mismo LiteLLM, una que sale directo a OpenRouter — y, el mismo día,
+        tres destinos nuevos de <span class="k">enrutador-ia</span> que
+        prueban un plan gratuito antes de gastar nada.
       </p>
     </div>
 
@@ -799,6 +822,24 @@
             <td class="mono">enrutador-ia<br /><span style="color:var(--ink-faint)">enrutar.sh</span></td>
             <td>Bash → dispatch con logging y ciclo de auto-aprendizaje semanal</td>
             <td>La tarea debe quedar registrada, o toca varios proveedores</td>
+            <td><span class="pill pill-ok"><span class="pill-dot"></span>bloqueado en código</span></td>
+          </tr>
+          <tr>
+            <td class="mono">enrutador-ia · gemini-free</td>
+            <td>agy (gratis) primero; si falla, la misma API de pago que <span class="k">gemini</span></td>
+            <td>Lo mismo que <span class="k">gemini</span>, sin gastar si no hace falta</td>
+            <td><span class="pill pill-ok"><span class="pill-dot"></span>bloqueado en código</span></td>
+          </tr>
+          <tr>
+            <td class="mono">enrutador-ia · gpt-oss-free</td>
+            <td>agy pidiendo <span class="k">gpt-oss-120b-medium</span> — SIN respaldo de pago</td>
+            <td>Segunda opinión de OpenAI sin tocar Codex/ChatGPT</td>
+            <td><span class="pill pill-ok"><span class="pill-dot"></span>bloqueado en código</span></td>
+          </tr>
+          <tr>
+            <td class="mono">enrutador-ia · auditor-free</td>
+            <td>agy (gratis) primero; si falla, GLM (<span class="k">cloud-coder</span>) de red</td>
+            <td>Rol Auditor — es el destino que usa por defecto ahora</td>
             <td><span class="pill pill-ok"><span class="pill-dot"></span>bloqueado en código</span></td>
           </tr>
           <tr>
@@ -833,6 +874,52 @@
       se registra con <span class="k">claude mcp add local-models -s user</span> —
       disponible en todos los proyectos de Claude Code, no solo este.
     </p>
+
+    <div style="height: 28px"></div>
+
+    <figure>
+      <div class="diagram-frame">
+        <svg viewBox="0 0 760 200" role="img" aria-label="gemini-free y auditor-free prueban primero agy en su plan gratuito (gpt-oss-120b o Gemini 3.7); solo si agy falla por un motivo concreto —no instalado, exit distinto de cero, o status distinto de SUCCESS— el enrutador cae al modelo de pago (GLM o la API de Gemini) como red de seguridad." xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow3" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" style="fill:var(--ink-faint)" />
+    </marker>
+    <marker id="arrow3-accent" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" style="fill:var(--brass)" />
+    </marker>
+  </defs>
+
+  <rect class="svg-box" x="20" y="70" width="170" height="60" rx="3" />
+  <rect class="svg-box-accent" x="270" y="70" width="190" height="60" rx="3" />
+  <rect class="svg-box" x="550" y="70" width="190" height="60" rx="3" />
+
+  <text class="svg-title" x="105" y="96" text-anchor="middle" font-size="13.5">enrutador-ia</text>
+  <text class="svg-sub" x="105" y="112" text-anchor="middle" font-size="10">auditor-free · gemini-free</text>
+
+  <text class="svg-title" x="365" y="96" text-anchor="middle" font-size="13.5">agy — gratis</text>
+  <text class="svg-sub" x="365" y="112" text-anchor="middle" font-size="10">gpt-oss-120b / Gemini 3.7</text>
+
+  <text class="svg-title" x="645" y="96" text-anchor="middle" font-size="13.5">GLM / API Gemini</text>
+  <text class="svg-sub" x="645" y="112" text-anchor="middle" font-size="10">pago — red de seguridad</text>
+
+  <path class="svg-line" marker-end="url(#arrow3)" d="M190,100 L268,100" />
+  <text class="svg-label" x="229" y="92" text-anchor="middle" font-size="10.5">prueba primero</text>
+
+  <path class="svg-line-dash" marker-end="url(#arrow3-accent)" d="M365,130 L365,165 L645,165 L645,132" />
+  <text class="svg-label-accent" x="505" y="159" text-anchor="middle" font-size="10.5">si falla: no instalado / exit≠0 / status≠SUCCESS</text>
+</svg>
+
+      </div>
+      <figcaption>
+        Cómo deciden <span class="k">gemini-free</span> y <span class="k">auditor-free</span>:
+        prueban <span class="k">agy</span> primero y, si responde con éxito, ahí
+        termina. Solo si falla por un motivo concreto — nunca por una respuesta
+        floja — el enrutador cae al modelo de pago, dejándolo siempre dicho en el
+        log. Validado con 3 bugs sembrados antes de decidir el orden: 3/3 aciertos
+        en ambos, la diferencia fue overhead de tokens (~115× más en <span class="k">agy</span>)
+        y fiabilidad, no acierto.
+      </figcaption>
+    </figure>
   </section>
 
   <!-- ─────────────────────────────────────────────────────── -->
@@ -866,6 +953,10 @@
       <div class="rule">
         <span class="rule-mark">06</span>
         <span class="rule-text"><b>SENSIBLE=1 bloquea en código.</b> Datos personales o credenciales sensibles nunca llegan a Codex/Gemini/cloud vía <span class="k">enrutador-ia</span> — el MCP de OpenRouter libre es la única vía que aún depende de la convención, no del código.</span>
+      </div>
+      <div class="rule">
+        <span class="rule-mark">07</span>
+        <span class="rule-text"><b>Gratis primero, pero nunca en silencio.</b> <span class="k">gemini-free</span> y <span class="k">auditor-free</span> prueban un plan gratuito antes de gastar — la caída al modelo de pago queda siempre dicha en el log, con el motivo exacto. Un gasto que no se ve es justo lo que la regla 05 existe para evitar.</span>
       </div>
     </div>
   </section>
@@ -908,6 +999,16 @@
         <div class="tl-date">2026-08-21</div>
         <div class="tl-what">Claude Code conectado vía MCP</div>
         <div class="tl-lesson">local-models con 3 tools (locales + OpenRouter libre) — esta pasada, documentada en esta misma página.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2026-08-21</div>
+        <div class="tl-what">El tier gratuito de gemini-cli muere en pleno uso</div>
+        <div class="tl-lesson">Una llamada real devolvió <span class="k">IneligibleTierError</span> mandando a migrar a Antigravity — se instaló <span class="k">agy</span> (Antigravity CLI) como alternativa gratuita real, ya autenticada sin login manual.</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2026-08-21</div>
+        <div class="tl-what">Auditor titular validado y movido a auditor-free</div>
+        <div class="tl-lesson">3 bugs sembrados (IVA, SQLi, off-by-one) contra gpt-oss-120b y GLM: 3/3 en ambos. GLM se queda como red por fiabilidad y ~115× menos overhead de tokens, no por acierto.</div>
       </div>
     </div>
   </section>
