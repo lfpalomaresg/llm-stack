@@ -110,8 +110,13 @@ respuesta pública de Apple. Requiere escalado interno de Apple.
 
 **Palancas de mitigación identificadas (aún sin aplicar):**
 - **Actualizar macOS:** hay **26.6.2 disponible** (verificado con
-  `softwareupdate --list` el 21/08). No confirmado que arregle este bug, pero
-  es el peldaño más barato con posibilidad de fix.
+  `softwareupdate --list` el 21/08). ⚠️ **Verificado el 21/08 noche: NO hay
+  documentación de que arregle este bug.** Dos datos en contra: (1) los fixes
+  de kernel y driver gráfico que Apple destacó en esta oleada **ya venían en
+  26.5.2** — la versión que tenemos, y petó igual; (2) los issues de MLX
+  siguen abiertos sin fix de Apple confirmado en ninguna versión. Actualizar
+  sigue siendo razonable (higiene general), pero como apuesta, no como
+  solución documentada — la mitigación real está en las otras palancas.
 - **`sysctl iogpu.wired_limit_mb`** (ahora a 0 = default ~27 GB en este Mac):
   fijarlo MÁS BAJO (p. ej. 24576) deja margen de seguridad a WindowServer —
   los modelos que no quepan fallarán con error visible en vez de panic, que es
