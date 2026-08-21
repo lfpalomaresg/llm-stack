@@ -108,6 +108,26 @@ Hay múltiples reportes públicos con los mismos panic strings:
 26.4; nosotros estamos en 26.5.2 y nos pasó, así que sigue vivo ahí). Sin
 respuesta pública de Apple. Requiere escalado interno de Apple.
 
+**Hallazgo adicional (22/08, de los propios stackshots):** en el instante de
+AMBOS panics había una sesión de **Codex** viva (`Codex (Renderer)` +
+`Codex (Service)` + CLI `codex`), además de Chrome, Claude Desktop, Notion y
+Granola — todos con procesos *Renderer* de Electron/Chromium, que son
+**clientes de GPU por composición** (reservan IOSurfaces para pintar su
+ventana; la inferencia de Codex es cloud y no cuenta). El proceso que panicó
+fue **WindowServer**, el compositor que gestiona los objetos de memoria de GPU
+de todas esas ventanas — y `IOGPUGroupMemory.cpp` es justo el contable de esos
+grupos. Codex no fue LA causa, pero engordó la condición de disparo nº 3
+(varios procesos compitiendo por GPU) en el peor momento posible.
+
+**Reconstrucción completa del disparo:**
+```
+MLX (35B + R1)                        → ~27 GB wired (el techo de GPU del Mac)
++ relevo worker↔gemma                 → ciclos carga/descarga en pleno límite
++ WindowServer sirviendo a Codex/     → N clientes GPU más peleando
+  Chrome/Claude/Notion/Granola           por las migajas
+= las 3 condiciones de disparo del bug de Apple, simultáneas
+```
+
 **Palancas de mitigación identificadas (aún sin aplicar):**
 - **Actualizar macOS:** hay **26.6.2 disponible** (verificado con
   `softwareupdate --list` el 21/08). ⚠️ **Verificado el 21/08 noche: NO hay
@@ -127,6 +147,26 @@ respuesta pública de Apple. Requiere escalado interno de Apple.
   previo), y/o bajar techos de contexto.
 - **Reportar a Apple** (Feedback Assistant) con nuestros 2 `panic-full` — suma
   al escalado interno que piden los issues.
+- ❌ **DESCARTADO bajar `iogpu.wired_limit_mb` (22/08):** los pesos del AGENTE
+  solos son 25,6 GB — cualquier techo que dé margen real (≤24,5 GB) impide que
+  el 35B y el R1 convivan, o sea, mata la estructura. Y ni siquiera ataca el
+  disparador probable (el relevo caliente). Se protege por reglas operativas,
+  no por capado.
+
+## 8. Reglas operativas adoptadas (22/08) — mitigación sin perder estructura
+
+1. **Endurecer el relevo worker↔auditor local**: entre descargar el worker y
+   cargar gemma, verificar que la GPU ha liberado de verdad (pausa +
+   comprobación), en vez del ciclo descarga→carga inmediato. [pendiente de
+   implementar en el mecanismo de relevo]
+2. **Relevo solo sin presión**: si la GPU va justa, el auditor sensible espera
+   o la tarea va a `auditor-free` (cloud, 0 GPU local).
+3. **Minimizar clientes GPU accesorios durante operaciones de carga/descarga
+   con el AGENTE cargado**: cerrar o no tener activas las apps Electron
+   (Codex desktop, Chrome cargado de pestañas, etc.). El CLI `codex` en
+   terminal apenas pesa; la app con Renderer sí.
+4. **La validación real de opencode (`@auditor-local`) queda condicionada** a
+   tener 1-3 aplicadas y el peldaño 5 de la escalera (stack LIGERO) en verde.
 
 ## 6. Recuperar la sesión de Claude Code tras un reinicio
 
