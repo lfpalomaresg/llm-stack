@@ -68,8 +68,8 @@ y el siguiente paso es mitigar/reportar, no insistir.
 | 2 | Inspeccionar si `agy` usa GPU: lanzarlo SOLO (sin stack cargado, `stack.sh stop`) con `sudo powermetrics --samplers gpu_power` o Monitor de Actividad pestaña GPU | Ninguno (sin stack) | ✅ 22/08 | **`agy` NO toca la GPU local**: frameworks Metal mapeados (enlazado estándar) pero **cero regiones de memoria GPU asignadas** (`vmmap` durante llamada real). Inferencia 100% nube (SUCCESS, 4,2 s) |
 | 3 | `agy-bridge.py` + curl manual a `:4010` (SIN opencode) con stack cargado | Bajo | ✅ 22/08 | Bridge responde end-to-end (`gpt-oss-free`, 14,4k tokens in / 64 out); los modelos locales ni se inmutaron (coder+8B IDLE intactos), RAM estable. El camino bridge→agy→nube tiene 0 interacción con GPU local |
 | 4 | Lo mismo con stack en **AGENTE** completo — el bridge solo, sin opencode | Medio | ⏭️ Innecesario | Con 2 y 3 demostrado que el camino del bridge no toca GPU local — cargar el AGENTE para repetirlo no aporta información |
-| 5 | opencode + `@auditor-local` con stack en **LIGERO** | Medio | ⬜ | |
-| 6 | La prueba original: opencode + `@auditor-local` con AGENTE completo — **SOLO si 1-5 no explican nada**, con todo lo demás cerrado y trabajo guardado | Alto (es la que petó 2×) | ⬜ | |
+| 5 | opencode + `@auditor-local` con stack en **LIGERO** | Medio | ✅ 22/08 00:47 | **SIN PANIC — y reprodujo el mecanismo completo del crash.** Ver §9 |
+| 6 | La prueba original: opencode + `@auditor-local` con AGENTE completo — **SOLO si 1-5 no explican nada**, con todo lo demás cerrado y trabajo guardado | Alto (es la que petó 2×) | ❌ Innecesario | El peldaño 5 explicó el mecanismo — repetir la condición de panic no aporta nada |
 
 Mitigación de diseño disponible sin repetir nada (aplicable ya si 1-2 dan
 señal): prohibir que opencode invoque el auditor con el perfil AGENTE completo
@@ -172,6 +172,52 @@ MLX (35B + R1)                        → ~27 GB wired (el techo de GPU del Mac)
    terminal apenas pesa; la app con Renderer sí.
 4. **La validación real de opencode (`@auditor-local`) queda condicionada** a
    tener 1-3 aplicadas y el peldaño 5 de la escalera (stack LIGERO) en verde.
+
+## 9. LA TECLA — peldaño 5 (22/08 00:47): el mecanismo completo, reproducido sin crash
+
+Con el stack en LIGERO (solo 8B, GPU con ~17 GB de margen) se lanzó
+`opencode run --agent auditor-local` con un bug sembrado. **No hubo panic** —
+y la prueba destapó la cadena causal completa de la noche anterior:
+
+1. **El harness de opencode no cabe en gemma@8k.** opencode mete su prompt de
+   sistema + definiciones de herramientas (>8k tokens; `agy` mostró ~14-17k de
+   overhead equivalente) y LiteLLM devuelve en bucle:
+   *"The number of tokens to keep from the initial prompt is greater than the
+   context length"*. En 5 minutos de prueba: **163 líneas de ERROR** en
+   `litellm.log` (y 1.078 acumuladas contando la noche del panic).
+2. **opencode reacciona con reintentos + compactación**, y cada vuelta dispara
+   **cargas JIT del coder (17,2 GB)** vía LiteLLM→LM Studio — recargó el coder
+   él solo estando en perfil LIGERO.
+3. **El proceso sobrevive a SIGTERM** — siguió re-encolando peticiones y
+   regenerando tras matarlo; hizo falta `kill -9` + descargar el coder para
+   parar la tormenta.
+4. Anoche, esa misma tormenta corrió **con el AGENTE al techo de GPU** (~27 GB):
+   cargas de 17-20 GB en bucle + generaciones huérfanas + relevo caliente +
+   renderers Electron = churn masivo de asignaciones wired justo en la zona
+   del bug de `IOGPU.kext` → **panic**. (Encaja con el `litellm.log` de las
+   22:23: *"Failed to load model qwen3.6-35b-a3b… insufficient resources"* —
+   la misma recarga JIT, con el 35B.)
+
+Nota positiva: **gemma SÍ cazó el bug sembrado** (identificó el error del IVA)
+antes de que la espiral de contexto se lo comiera.
+
+**Causa raíz (dos capas):**
+- *Nuestra:* `@auditor-local` vía opencode está **estructuralmente mal
+  configurado** — el harness de opencode no cabe en el contexto de 8k con el
+  que el relevo carga a gemma, y `local-auditor` **ni siquiera está declarado**
+  en `opencode.json` (opencode no sabe su límite y no compacta a tiempo).
+  El retry-storm resultante es nuestro.
+- *De Apple:* que ese churn tumbe el kernel en vez de fallar limpio es el bug
+  de `IOGPU.kext` (§7) — nosotros solo podemos no pisar su zona de disparo.
+
+**Arreglos candidatos (pendientes de decidir):**
+- a) Subir el contexto de gemma en el relevo (8k → 16k) Y declarar
+  `local-auditor` con su límite real en `opencode.json`.
+- b) Alternativa conservadora: retirar `@auditor-local` de opencode — las
+  auditorías sensibles van solo por `enrutar.sh` (prompts directos pequeños,
+  relevo endurecido, validado) y opencode usa `@revisor` (cloud) para el resto.
+- c) En cualquier caso: límite de reintentos en LiteLLM para errores de
+  contexto (son deterministas — reintentar no arregla nada y alimenta el churn).
 
 ## 6. Recuperar la sesión de Claude Code tras un reinicio
 
