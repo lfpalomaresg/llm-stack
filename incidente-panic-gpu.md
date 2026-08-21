@@ -65,9 +65,9 @@ y el siguiente paso es mitigar/reportar, no insistir.
 | # | Prueba | Riesgo | Estado | Resultado |
 |---|---|---|---|---|
 | 1 | Buscar el panic string + build de macOS en foros Apple/MLX/LM Studio (¿bug conocido? ¿fix en 26.6?) | Ninguno | ✅ 21/08 | **ES UN BUG CONOCIDO de IOGPU.kext de Apple**, disparado por MLX. Ver §7 |
-| 2 | Inspeccionar si `agy` usa GPU: lanzarlo SOLO (sin stack cargado, `stack.sh stop`) con `sudo powermetrics --samplers gpu_power` o Monitor de Actividad pestaña GPU | Ninguno (sin stack) | ⬜ | |
-| 3 | `agy-bridge.py` + curl manual a `:4010` (SIN opencode) con stack en **LIGERO** (solo 8B) | Bajo | ⬜ | |
-| 4 | Lo mismo con stack en **AGENTE** completo — el bridge solo, sin opencode | Medio | ⬜ | |
+| 2 | Inspeccionar si `agy` usa GPU: lanzarlo SOLO (sin stack cargado, `stack.sh stop`) con `sudo powermetrics --samplers gpu_power` o Monitor de Actividad pestaña GPU | Ninguno (sin stack) | ✅ 22/08 | **`agy` NO toca la GPU local**: frameworks Metal mapeados (enlazado estándar) pero **cero regiones de memoria GPU asignadas** (`vmmap` durante llamada real). Inferencia 100% nube (SUCCESS, 4,2 s) |
+| 3 | `agy-bridge.py` + curl manual a `:4010` (SIN opencode) con stack cargado | Bajo | ✅ 22/08 | Bridge responde end-to-end (`gpt-oss-free`, 14,4k tokens in / 64 out); los modelos locales ni se inmutaron (coder+8B IDLE intactos), RAM estable. El camino bridge→agy→nube tiene 0 interacción con GPU local |
+| 4 | Lo mismo con stack en **AGENTE** completo — el bridge solo, sin opencode | Medio | ⏭️ Innecesario | Con 2 y 3 demostrado que el camino del bridge no toca GPU local — cargar el AGENTE para repetirlo no aporta información |
 | 5 | opencode + `@auditor-local` con stack en **LIGERO** | Medio | ⬜ | |
 | 6 | La prueba original: opencode + `@auditor-local` con AGENTE completo — **SOLO si 1-5 no explican nada**, con todo lo demás cerrado y trabajo guardado | Alto (es la que petó 2×) | ⬜ | |
 
@@ -157,8 +157,13 @@ MLX (35B + R1)                        → ~27 GB wired (el techo de GPU del Mac)
 
 1. **Endurecer el relevo worker↔auditor local**: entre descargar el worker y
    cargar gemma, verificar que la GPU ha liberado de verdad (pausa +
-   comprobación), en vez del ciclo descarga→carga inmediato. [pendiente de
-   implementar en el mecanismo de relevo]
+   comprobación), en vez del ciclo descarga→carga inmediato.
+   ✅ **IMPLEMENTADO 22/08** en `enrutar.sh` (destino `local-auditor`): espera
+   activa hasta 15 s a que los pequeños desaparezcan de `lms ps` + 3 s de
+   drenaje del driver antes de cargar gemma; si la descarga no termina,
+   BLOQUEADO visible con instrucción (nunca cargar encima de una descarga a
+   medias). Suite `test-ram.sh`: 10/10 tras el cambio. Nota: la suite aún no
+   tiene caso específico del relevo endurecido — hueco menor conocido.
 2. **Relevo solo sin presión**: si la GPU va justa, el auditor sensible espera
    o la tarea va a `auditor-free` (cloud, 0 GPU local).
 3. **Minimizar clientes GPU accesorios durante operaciones de carga/descarga
