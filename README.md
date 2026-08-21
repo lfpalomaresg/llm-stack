@@ -19,6 +19,34 @@ compatible OpenAI, con roles agénticos fijos (orquestador, workers en
 paralelo, auditor) y cuatro modelos de refuerzo en [OpenRouter](https://openrouter.ai/)
 que solo entran por señal objetiva — nunca en silencio.
 
+## Uso
+
+Los perfiles de RAM y `enrutador-ia` no cambian por nada de esto — siguen
+igual que siempre. Lo único con un patrón de uso nuevo es el MCP.
+
+**MCP `local-models` (registrado en Claude Code a nivel de usuario):**
+tras registrarlo hace falta una sesión **nueva** de Claude Code para que
+cargue las herramientas — una sesión ya abierta en el momento del registro
+no las ve hasta reiniciarla. A partir de ahí no hay comando que memorizar,
+basta con pedirlo en lenguaje natural:
+
+| Quieres... | Qué decir |
+|---|---|
+| Consulta rápida a un modelo local sin gastar tokens de Claude | *"Pregúntale a local-fast que resuma esto"* |
+| Probar un modelo concreto del catálogo de OpenRouter | *"Pregúntale a z-ai/glm-5.2 qué opina de X"* |
+| Ver qué alias locales hay disponibles | *"¿Qué modelos locales tienes disponibles?"* |
+
+⚠️ Nunca mandar datos sensibles del trabajo a `ask_openrouter_model` — sale
+de la máquina sin la gobernanza en código que sí tiene `enrutador-ia` (ver
+guardarraíles en la [documentación visual](https://lfpalomaresg.github.io/llm-stack/)).
+
+**Perfiles de RAM (sin cambios):** `stack.sh start|general|code|ligero|status|stop`.
+
+**Gate RGPD de este repo:** si un commit se bloquea por un falso positivo,
+revisa qué marcó y, si es inofensivo, `RGPD_OVERRIDE=1 git commit ...`
+(nunca `--no-verify`). Solo está instalado en este Mac — un clon en otra
+máquina necesita reinstalarlo, ver `INSTALL-RGPD.md` de la skill `conclave`.
+
 ## Contenido de este repo
 
 | Archivo | Qué es |
