@@ -181,3 +181,38 @@ como sesión). Guarda nueva en el wrapper de `.zshrc`: `opencode run -m` con
 modelos <32k (fast/worker/auditor/embed) se bloquea con error visible (rc=7) —
 verificada. Suite test-ram: 10/10 tras ambos cambios. `local-coder` y
 `local-worker` quedan exentos del `/no_think` (uno no piensa, el otro debe pensar).
+
+## 9. Batería 2.0 (22/08 noche) — resultado final y el veredicto sobre opencode headless
+
+**12 de 13 escenarios en verde** tras las correcciones v5.4.1 (en serie, regla de la sala):
+
+| Escenario | Resultado |
+|---|---|
+| Enrutador → 35B / fast / coder(curl) | ✅ 2,7-9,6 s |
+| Enrutador → R1 afinado (razonar) | ✅ ADR 120€ correcto, 86 s |
+| Workers ×2 en paralelo | ✅ 50 s total, veredictos correctos |
+| **Relevo gemma (sensible)** | ✅ 14,9 s, bug IVA cazado — blindaje OK |
+| MCP local-models (Claude Desktop) | ✅ |
+| **Hermes elige destino por doctrina v5.4.1** | ✅ eligió gpt-oss-free solo y acertó |
+| auditor-free · gemini-free · gpt-oss-free · GLM · codex | ✅ 3-47 s |
+| Guarda anti-harness del wrapper | ✅ bloquea con rc=7 |
+| **opencode `run` headless con primario local** | 🔴 **NO APTO — 3 ejecuciones, 3 espirales de compactación** |
+
+**El veredicto (regla de las 3 cumplida, 3 runs medidos):**
+1. `@explorador` (8B): 133 pasos explorador↔compact en 25 min, tarea trivial sin terminar.
+2. `@revisor` intento 1: el PRIMARIO (coder@32k) compactó en el paso 2 de una tarea de una línea.
+3. `@revisor` intento 2: 5 compactaciones en 13 pasos; @revisor llegó a trabajar (2 turnos) pero el primario vivía compactando.
+
+**Causa estructural:** el harness de opencode (~15-30k tokens) + los límites HONESTOS
+declarados en opencode.json (32k, sincronizados el 21/08 por seguridad tras el congelón
+del 02/08) = el umbral de compactación se cruza casi de salida. Con límites deshonestos
+no compacta… y revienta la RAM (02/08). No hay hueco: es aritmética, no un bug nuestro.
+Sin errores en LiteLLM en ningún run — la espiral es invisible a las guardas anti-tormenta;
+la señal de detección es `agent=compaction` repetido en su log.
+
+**Doctrina resultante:**
+- `opencode run` headless con primario local: NO APTO (el enrutador ya no lo usa para nada).
+- opencode interactivo con coder@32k: válido asumiendo compactación temprana, operador mirando.
+- 🌱 Semillas: (a) adelgazar el harness (desactivar tools/plugins no usados) y re-medir;
+  (b) primario cloud (GLM 1M) para sesiones opencode largas — dinero, decisión operador.
+- La faena barata local ya tiene vía sana: enrutar.sh por curl (2-16 s, validada hoy).
