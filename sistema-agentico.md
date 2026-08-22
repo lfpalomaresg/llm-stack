@@ -139,3 +139,32 @@ Hallazgos del test de delegación:
 - [x] 🔴 Investigar y resolver el kernel panic de GPU ✅ 22/08 — causa raíz hallada (escalera de 5 peldaños, sin repetir la condición peligrosa) y resuelta por rediseño: `@auditor-local` fuera de opencode, relevo endurecido en `enrutar.sh`, tapa anti-tormenta en LiteLLM. Ver `incidente-panic-gpu.md`.
 - [ ] `llmfit bench` contra los modelos cargados (números medidos para contribuir/comparar) — opcional
 - [ ] Una semana de rodaje del perfil AGENTE antes de plantear cualquier borrado (el 27B NO se descargó: descartado con datos antes de gastar disco)
+
+## 8. v5.4.1 (2026-08-22) — afinado del worker + rebalanceo de papeles
+
+**Contexto:** en las pruebas del 22/08 el R1-worker falló aritmética con el
+muestreo por defecto de LM Studio (~0.8): RevPAR 93€ donde tocaba 102€, «97 no
+es primo». Decisión del operador: afinar antes de sustituir (a) + rebalancear (b).
+
+**a) Afinado aplicado y MEDIDO:**
+- `temperature 0.6` + `top_p 0.95` fijados en `litellm.config.yaml` (recomendación
+  DeepSeek para destilados R1; backup `.bak.20260822-r1temp`).
+- Pensar POR DEFECTO para `local-worker` (exento del `/no_think` de enrutar.sh) y
+  techo propio de 14k tokens (con 8k se quedaba sin espacio para la respuesta).
+- **Bench 8 tareas verificables (en serie, perfil AGENTE): 7/8 de contenido
+  correcto** (antes: 2 pifias en 4). Único fallo real: un modus ponens (T6).
+  Debilidad que PERSISTE: no respeta formatos de salida pedidos («Concluye con
+  RESPUESTA: X») — para automatizar sobre su salida, parsear con tolerancia.
+  Tiempos: 9-200 s/tarea (mediana ~80 s).
+
+**b) Rebalanceo de papeles (doctrina en 4 documentos):**
+Razonar acotado NO sensible → **`gpt-oss-free`** (120B vía agy: mejor modelo,
+~10 s, 0 €, **0 GPU local** — no puede tumbar el Mac). El R1 queda de titular
+para material SENSIBLE y para trabajar sin red. Actualizados: JERARQUIA_IA.md
+(tabla de reparto), REGLAS_ENRUTAMIENTO.md, SOUL.md de hermes (escalón nuevo,
+armonizada la línea antigua que lo contradecía), AGENTS.md de opencode (con el
+límite honesto: `tool_call:false` en el bridge — análisis puro sí, leer ficheros no).
+
+**c) Sustituir el R1: SEMILLA DORMIDA.** Disparador: que falle tareas sensibles
+reales durante el rodaje (las no sensibles ya no le tocan). Si dispara: candidatos
+solo de editores serios, aritmética de llmfit sí / ranking no, y este mismo bench.

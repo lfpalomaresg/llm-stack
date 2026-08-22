@@ -36,6 +36,11 @@ model_list:
       model: openai/deepseek/deepseek-r1-0528-qwen3-8b
       api_base: http://localhost:1234/v1
       api_key: lm-studio
+      # v5.4.1 (2026-08-22): muestreo recomendado por DeepSeek para destilados R1.
+      # Sin esto manda el defecto de LM Studio (~0.8) — medido: pifias numéricas
+      # (RevPAR 93 donde tocaba 102; "97 no es primo") y divagues hasta el techo.
+      temperature: 0.6
+      top_p: 0.95
 
   # Auditor local para material sensible (familia distinta a Qwen ⇒ cumple
   # la regla "revisor ≠ productor" de JERARQUIA_IA). Carga JIT, no residente.
