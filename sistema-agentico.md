@@ -168,3 +168,16 @@ límite honesto: `tool_call:false` en el bridge — análisis puro sí, leer fic
 **c) Sustituir el R1: SEMILLA DORMIDA.** Disparador: que falle tareas sensibles
 reales durante el rodaje (las no sensibles ya no le tocan). Si dispara: candidatos
 solo de editores serios, aritmética de llmfit sí / ranking no, y este mismo bench.
+
+### §8.b Recableado de `local-coder` (22/08 noche, OK operador) — APLICADO Y MEDIDO
+
+El destino `local-coder` del enrutador despachaba vía `opencode run` (harness
+completo) para poder tocar repos — esa vía fue la causa raíz del 4º reinicio.
+Recableado a la vía RÁPIDA (curl directo a LiteLLM, mismos resolver/bloqueo/
+privacidad que el resto de locales): **16 s con swap de perfil incluido** donde
+antes moría a los 4 minutos. Trade-off asumido: el enrutador ya no lee/edita
+repos con local-coder (material en el prompt; para repos → `codex` u opencode
+como sesión). Guarda nueva en el wrapper de `.zshrc`: `opencode run -m` con
+modelos <32k (fast/worker/auditor/embed) se bloquea con error visible (rc=7) —
+verificada. Suite test-ram: 10/10 tras ambos cambios. `local-coder` y
+`local-worker` quedan exentos del `/no_think` (uno no piensa, el otro debe pensar).
