@@ -249,3 +249,78 @@ nada de lo hablado; solo el trabajo no guardado en disco de otras apps.
 La sesión de esta investigación: id local `efe6ab4d-b0f5-4bc2-b907-4e0644c05fae`
 (web: `claude.ai/code/session_01AaSqaS7cTwfdtgkBvKcXFu`). Arrancada desde
 `~`, así que: `cd ~ && claude --resume` y elegirla en la lista.
+
+## 10. TERCER EPISODIO (22/08 12:37) — watchdog de WindowServer, SIN tormenta
+
+**Qué pasó:** reinicio a las 12:38 durante la batería de pruebas del entorno
+agéntico. Esta vez **NO es kernel panic** (PanicReporter vacío): son dos
+`userspace_watchdog_timeout` de WindowServer (12:37:17 y 12:37:53, `bug_type
+409`, stackshots en DiagnosticReports) — WindowServer se quedó sin GPU más
+allá de su deadline y el watchdog tumbó la sesión gráfica.
+
+**Qué corría (ventana 12:23–12:37):**
+- `opencode run` headless (prueba de `@explorador`): coder-30B en
+  `PROCESSINGPROMPT` sostenido (harness de ~15-30k tokens) + qwen3-8b
+  `GENERATING` (el subagente) — perfil CODE, ~22 GB wired.
+- Una TERCERA petición encolada: prueba del MCP `local-models`
+  (`ask_local_model` → local-coder), que expiró a los 120 s.
+- Renderers Electron habituales (Claude Desktop, Chrome…) pintando contra el
+  mismo WindowServer.
+
+**Qué NO pasó (diferencia clave con el 21/08):** cero líneas ERROR en
+`litellm.log` en la ventana del crash; sin gemma, sin relevo, sin cargas JIT,
+sin retry-storm. Las mitigaciones del §9 funcionaron — y aun así petó.
+
+**Lectura:** la zona frágil no era (solo) la tormenta: es **WindowServer
+compitiendo con MLX por la GPU en macOS 26.5.2**. El disparador de hoy fue
+concurrencia legítima pesada: prompt-processing largo del 30B + generación
+simultánea del 8B + tercera petición manteniendo la cola caliente. El
+`PARALLEL=4` de LM Studio permite apilar trabajo pesado que de uno en uno es
+inocuo.
+
+**Regla operativa nueva (ADOPTADA 22/08 con OK del operador — criterio: fluidez sin perder productividad; por eso el punto 2, PARALLEL 4→2, se DESCARTA a propósito: recortaría los 4 workers del AGENTE):**
+1. **Un solo trabajo pesado de GPU a la vez.** Mientras opencode mastica su
+   harness (o cualquier modelo grande procesa >10k tokens), NO lanzar
+   peticiones adicionales a modelos locales (ni enrutador, ni MCP, ni pruebas).
+   En serie, no en paralelo. La concurrencia queda para peticiones pequeñas.
+2. Valorar bajar PARALLEL de LM Studio (4→2) para que el servidor lo imponga.
+3. Actualizar a macOS 26.6.2 (higiene, sin fix documentado) y sumar el
+   stackshot 409 al reporte a Apple (refuerza: watchdog además de panics).
+
+**Nota de método:** el apilamiento lo provoqué yo (Claude Code) al diseñar la
+batería con pruebas en paralelo "para aprovechar el tiempo". Coste real: un
+reinicio. La batería continúa EN SERIE y con OK explícito del operador.
+
+### §10.b Secuela (22/08 14:11-15:05) — hermes degradado por TRES huecos encadenados
+
+El operador probó hermes por **Telegram** (gateway) y la sesión fue pésima: 18,8 min
+de respuesta (1.129 s según `gateway.log`), congelones, y avisos de «falta de
+recursos / posible crash». No era avería del 35B — eran tres huecos apilados:
+
+1. **El arranque en frío del LaunchAgent carga perfil CODE** — pero el proceso
+   siempre-encendido es el gateway de hermes, que necesita GENERAL. Tras el
+   reinicio de las 12:38, hermes quedó pidiendo `local-general` con el coder
+   ocupando el hueco.
+2. **El gateway de Telegram NO pasa por el wrapper de `.zshrc`** — la garantía
+   de perfil solo cubre sesiones de terminal. Nadie preparó GENERAL, y hermes +
+   LiteLLM reintentaron contra el guardarraíl: intentos repetidos de cargar
+   20 GB encima de 22 GB = los congelones (mini-tormenta, mismo patrón §9).
+3. **El guardarraíl de LM Studio quedó con contabilidad rancia tras los
+   reinicios sucios**: rechazaba cargar el 35B incluso con 29 GB libres,
+   presión 0 y sin otro grande (falló a 48k Y a 32k). Fix verificado:
+   `lms unload --all && lms server stop && lms server start` → cargó a la
+   primera (19 GiB) y responde en 2,5 s vía LiteLLM.
+
+**Reglas nuevas que salen de aquí (propuestas al operador):**
+- Tras cualquier reinicio sucio: **reiniciar el server de LM Studio** antes de
+  diagnosticar nada (guardarraíl rancio = falsos «insufficient resources»).
+- Decidir el **perfil de arranque en frío**: GENERAL (sirve al gateway 24/7)
+  en vez de CODE, o que el arranque del gateway de hermes garantice su perfil
+  como hace el wrapper de terminal.
+- Reintentos de hermes: DECIDIDO NO TOCAR (22/08, criterio productividad) — con el
+  arranque en frío en GENERAL el escenario determinista desaparece, y capar
+  reintentos penalizaría los transitorios legítimos (warm-ups). Riesgo residual
+  aceptado: hermes-por-Telegram con un opencode activo ocupando el hueco del
+  grande — lo cubre la regla «un solo orquestador a la vez».
+- ✅ APLICADO 22/08: arranque en frío del daemon pasa de CODE a GENERAL en
+  stack.sh (test-ram.sh 10/10 tras el cambio).

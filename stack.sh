@@ -162,7 +162,12 @@ case "$1" in
     _clave_openrouter
     if _lock 30; then
       if ! _loaded "$CODER" && ! _loaded "$GENERAL"; then
-        _perfil "$CODER" code 32768 && echo "Arranque en frío: perfil CODE activo"
+        # 2026-08-22 (§10.b, OK operador): en frío se carga GENERAL, no CODE.
+        # El proceso siempre-encendido es el gateway de hermes (Telegram) y su
+        # modelo es el 35B; el coder solo hace falta al abrir opencode, cuyo
+        # wrapper ya garantiza el swap. Con CODE en frío, hermes-por-Telegram
+        # quedaba sin modelo y reintentaba contra el guardarraíl (18 min/resp).
+        _perfil "$GENERAL" general && echo "Arranque en frío: perfil GENERAL activo (gateway hermes)"
       else
         echo "Ya hay un modelo grande cargado: no toco la RAM (posible sesión en curso)"
       fi
