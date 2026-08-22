@@ -216,3 +216,27 @@ la señal de detección es `agent=compaction` repetido en su log.
 - 🌱 Semillas: (a) adelgazar el harness (desactivar tools/plugins no usados) y re-medir;
   (b) primario cloud (GLM 1M) para sesiones opencode largas — dinero, decisión operador.
 - La faena barata local ya tiene vía sana: enrutar.sh por curl (2-16 s, validada hoy).
+
+### §9.b v5.4.2 (23/08) — el adelgazamiento que revivió opencode headless
+
+Ataque a+b sobre opencode (OK operador). Con una báscula casera (`probe-harness.py`,
+endpoint señuelo que pesa el request sin tocar GPU) se midió el harness real:
+**79 KB** = 59 KB de system prompt + 22 KB de tools. Dentro del system prompt,
+**41 KB eran las descripciones de las 57 skills de Claude** que opencode inyectaba
+desde `~/.agents/skills` (copia RANCIA del instalador iAmasters, jul/ago — 71
+entradas frente a las 57 canónicas de Drive).
+
+**Fix: `"tools": {"skill": false}` en opencode.json** → harness 79→37 KB (~10k
+tokens) → el coder@32k pasa de ~11k a ~22k de aire. Validado con modelo real:
+
+| Escenario (ayer) | Hoy |
+|---|---|
+| Primario coder: compactaba al paso 2, >4 min | ✅ 14,4 s, 0 compactaciones |
+| @revisor: 5 compactaciones/13 pasos, kill | ✅ **REVISOR_DIJO en 15,2 s**, bug IVA + corrección |
+| @explorador: 133 pasos de livelock, 25 min | ✅ **EXPLORADOR_DIJO: París en 17,2 s** |
+
+**opencode headless: REHABILITADO** (primario coder + subagentes local y cloud).
+La guarda del wrapper (primarios <32k bloqueados) SE MANTIENE — no re-testada esa
+vía y el margen del 24k sigue siendo menor. El veredicto del §9 queda superado por
+esta vía b); el §9 se conserva como historia del diagnóstico.
+Pendiente del operador: decidir qué hacer con `~/.agents/skills` (copia rancia).
