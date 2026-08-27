@@ -240,3 +240,57 @@ La guarda del wrapper (primarios <32k bloqueados) SE MANTIENE — no re-testada 
 vía y el margen del 24k sigue siendo menor. El veredicto del §9 queda superado por
 esta vía b); el §9 se conserva como historia del diagnóstico.
 Pendiente del operador: decidir qué hacer con `~/.agents/skills` (copia rancia).
+
+## 10. Evaluación Qwen3.8-27B + ¿actualizar la familia? (2026-08-27/28)
+
+Pregunta del operador: ¿merece la pena Qwen3.8/4 en el stack? Evaluado con benches
+propios (no blogs). **Conclusión: el stack está en su óptimo; nada que actualizar.**
+Los 3 pesos del duelo se BORRARON el 28/08 (OK operador, ~54 GB liberados).
+
+### 10.a Duelo uncensored (A/B/C) — bench idéntico, en serie
+| Modelo | Calidad | Velocidad | Refusals negocio |
+|---|---|---|---|
+| A · JonathanColetti Q5 GGUF (Heretic) | 8/8 | 13,2 tok/s | 5/5 responde |
+| B · orcarouter 6-bit MLX | 8/8 | 14,1 tok/s | 5/5 responde |
+| **C · oficial mlx-community 4-bit** | 8/8 | **19,4 tok/s** | 5/5 responde |
+
+**Hallazgos:** (1) Qwen3.8 base es **muy poco censor** — el oficial respondió a los 5
+casos de negocio Y a un test discriminante (insultos de rap). El uncensored NO desbloquea
+nada para uso hotelero legítimo. (2) La abliteración **cuesta ~30% de velocidad** (pesos
+modificados razonan peor). (3) El oficial C gana a A y B en TODO lo medido. Provenance:
+JonathanColetti (Heretic+PPL honesta) > orcarouter (marketing) > huihui. **Ninguno se
+integró.** El descarte del 21/08 (denso = lento) queda reforzado: 13-19 tok/s vs los MoE.
+
+### 10.b Nicho de C (oficial) — medido, NO integrado (semilla)
+- **Contexto largo**: RAM CUMPLE (32-37% libre a 27k tokens → KV híbrido barato real,
+  cabría 64-128k), pero prompt-processing **160 tok/s = lento** (128k ≈ 13 min de ingesta).
+  Único nicho real = contexto largo de material SENSIBLE (que no puede ir a Kimi cloud).
+  El operador lo despriorizó.
+- **Visión imagen**: EMPATA con el 35B (ambos leyeron un gráfico con los 3 % exactos).
+  No aporta. **Vídeo**: LM Studio no lo sirve por API → no viable en el stack.
+- Veredicto: C no justifica integración. Semilla con disparador (si aparece necesidad
+  real de contexto-largo-sensible, los pesos se rebajan en 5 min).
+
+### 10.c ¿Actualizar la familia Qwen? Censo oficial (HF, namespace Qwen)
+- **NO existe Qwen4** (solo experimentales `qwen4_exp`: Flash-Next **180B** — no cabe).
+- **Serie 3.8 no tiene MoE de talla 36 GB**: solo el 27B denso (lento, descartado) y
+  gigantes cloud (2.4T-A95B). Alibaba no sacó un «3.8-35B-A3B».
+- **Orquestador Qwen3.6-35B-A3B (abril 2026)**: lo mejor que existe para 36 GB. No tocar.
+
+### 10.d Bench coder-30B vs 3.6-35B (ambos ya en disco) — LA LECCIÓN
+6 tareas de código con **verificación ejecutable** (`bench-coder.py`, reusable):
+| | Coder-30B (2025) | 3.6-35B (2026) |
+|---|---|---|
+| Corrección | **6/6 PASS** | **6/6 PASS** |
+| Tokens/tarea | **81** | **1.809** |
+| Tiempo/tarea | **~1 s** | **9-23 s** |
+
+Empatan en inteligencia, pero el coder-30B entrega el código **~15-20× más rápido** porque
+es *instruct puro sin cadena de pensamiento* — va directo. El 35B «razona» 1.809 tokens
+para una función de 5 líneas. **El coder viejo es INSUSTITUIBLE por diseño**: actualizarlo
+al 35B empeoraría la experiencia de código (mismo resultado, 20× más lento). La antigüedad
+no importa cuando el diseño (instruct directo) es el correcto para el papel.
+
+**Veredicto global:** stack en punto óptimo. Cada modelo está donde debe (el orquestador
+piensa, el coder ejecuta directo). El próximo salto real será Qwen4 estable — reevaluar
+entonces. Hasta ahí, no actualizar nada.
