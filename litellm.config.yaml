@@ -77,7 +77,17 @@ model_list:
   # Trigger cloud-coder: local falla tests 2x o tarea #critica
   - model_name: cloud-coder
     litellm_params:
-      model: openrouter/z-ai/glm-5.2          # $0.42/$1.32 por M · 1M ctx · MIT
+      # v5.4.3 (2026-08-28): GLM-5.2 -> GLM-5.3. Medido con bench-coder-or.py (6/6 ambos):
+      # GLM-5.3 usa ~5x menos tokens/tarea (145 vs 691) -> 4x MAS BARATO por tarea pese
+      # a mayor precio/token, y mas potente en codigo duro (81 Terminal-Bench). GLM-5.2
+      # era el peor de 4 candidatos en coste/tarea. Backup: .bak.20260828-glm53
+      model: openrouter/z-ai/glm-5.3           # $1.40/$4.40 por M · 1.3M ctx · pero ~5x menos verboso
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Escalon de codigo LIGERO: 38x mas barato que el viejo GLM-5.2 por tarea, 6/6 en el bench.
+  - model_name: cloud-coder-flash
+    litellm_params:
+      model: openrouter/z-ai/glm-5.3-flash     # $0.075/$0.25 por M · rey del valor (mas lento)
       api_key: os.environ/OPENROUTER_API_KEY
 
   # Alternativa de escalado ultra-barata (el 80B que no cabe local)

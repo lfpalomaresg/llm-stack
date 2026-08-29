@@ -13,7 +13,7 @@
 | **Workers ×N** | `local-worker` | DeepSeek-R1-0528-Qwen3-8B (razonamiento R1) | 4,6 GB | 16k | Tareas acotadas delegadas; hasta 4 en paralelo sobre UNA carga |
 | **Utility** | `local-fast` | Qwen3-8B | 4,6 GB | 24k | Commits, resúmenes, clasificar (legado; el worker R1 puede absorberlo) |
 | **Coder titular** | `local-coder` | Qwen3-Coder-30B-A3B (MoE) | 17,2 GB | **32k** (bajado de 48k: es el que petó el 02/08) | Sesiones de código — perfil CODE, por swap |
-| **Auditor titular** | `auditor-free`† | gpt-oss-120b (agy, gratis) → GLM-5.2 si falla | 0 GB | 1M | Revisión por defecto: gratis primero, GLM de red. Validado 3/3 con bugs sembrados (21/08) |
+| **Auditor titular** | `auditor-free`† | gpt-oss-120b (agy, gratis) → GLM-5.3 si falla | 0 GB | 1M | Revisión por defecto: gratis primero, GLM de red. Validado 3/3 con bugs sembrados (21/08) |
 | **Auditor sensible** | `local-auditor` | gemma-4-E4B-it OptiQ 4bit (Google) | ~4-5 GB | 8k | Datos que no salen del Mac. Familia ≠ Qwen ⇒ cumple "revisor ≠ productor". Carga JIT |
 | **RAG** | `local-embed` | Qwen3-Embedding-0.6B | 0,6 GB | — | Siempre residente |
 | **Visión local** | `local-general` | (el 35B ES el modelo de visión) | — | — | Visión pesada → `cloud-vision` (MiniMax) |
@@ -294,3 +294,30 @@ no importa cuando el diseño (instruct directo) es el correcto para el papel.
 **Veredicto global:** stack en punto óptimo. Cada modelo está donde debe (el orquestador
 piensa, el coder ejecuta directo). El próximo salto real será Qwen4 estable — reevaluar
 entonces. Hasta ahí, no actualizar nada.
+
+## 11. v5.4.3 (2026-08-28) — cloud-coder: GLM-5.2 → GLM-5.3 (duelo cloud a 4)
+
+Traído por el operador: Nex-N2-Pro (397B, nex-agi, derivado de Qwen3.5) y GLM-5.3.
+Ninguno cabe local (397B/743B) — son de la capa cloud. Bench propio de código con
+**verificación ejecutable** (`bench-coder-or.py`, vía OpenRouter, 6 tareas):
+
+| Modelo | Calidad | tok/tarea | vel | Precio out/M | **Coste/tarea** |
+|---|---|---|---|---|---|
+| GLM-5.2 (era el titular) | 6/6 | 691 | 121 t/s | $3,74 | **2,584 m$** (el peor) |
+| **GLM-5.3** ← nuevo titular | 6/6 | **145** | 90 t/s | $4,40 | 0,638 m$ |
+| **GLM-5.3-Flash** ← nuevo `cloud-coder-flash` | 6/6 | 271 | 61 t/s | $0,25 | **0,068 m$** (rey del valor) |
+| Nex-N2-Pro | 6/6 | 197 | 93 t/s | $1,00 | 0,197 m$ |
+
+**Hallazgos:** (1) Todos 6/6 en tareas medias → el bench no discrimina CALIDAD aquí;
+la ventaja de GLM-5.3 en código duro (81 Terminal-Bench) no se ve, solo su eficiencia.
+(2) **El precio/token engaña; manda el coste/tarea = precio × tokens usados.** GLM-5.3
+cobra más por token pero es ~5× menos verboso (145 vs 691) → **4× MÁS BARATO por tarea
+que GLM-5.2** Y más potente. (3) GLM-5.2 era el PEOR de los cuatro (precio alto +
+verboso). Corrige mi afirmación previa «GLM-5.3 es 3× más caro» — medido, es 4× más barato.
+(4) Nex-N2-Pro no gana en ningún eje (Flash lo bate en coste, GLM-5.3 en potencia).
+
+**Aplicado:** `cloud-coder` → `openrouter/z-ai/glm-5.3`; nuevo alias `cloud-coder-flash`
+→ `glm-5.3-flash` (escalón ligero, 38× más barato que el viejo GLM-5.2). Backup
+`litellm.config.yaml.bak.20260828-glm53`. Doctrina actualizada en opencode.json,
+JERARQUIA_IA.md, REGLAS_ENRUTAMIENTO.md. Ambos aliases verificados con llamada real.
+Frontera de datos intacta: cloud = solo escalado NO sensible. Báscula: `bench-coder-or.py`.
