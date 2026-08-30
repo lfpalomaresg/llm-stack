@@ -336,3 +336,32 @@ revenue/datos sensibles). Validado con 2 tablas de revenue reales: leídas bien,
 atranque. hermes aprende la vía en su SOUL.md (§Imágenes): nunca mandar imágenes crudas al
 modelo. Nota operativa: pausar el gateway de hermes exige `launchctl disable`+`bootout` (tiene
 KeepAlive; matar el PID no basta) — reactivar con `enable`+`bootstrap`.
+
+## 13. Evaluación de vídeo/agénticos (LTX-2.5, MiniMax H3, Muse Glimmer) — 2026-08-30
+
+Tres modelos evaluados con puerta de viabilidad ANTES de descargar (M4 Max 36 GB, ~59 GB disco).
+Solo uno era testable en local; los otros dos, descartados por hardware/licencia sin bajar nada.
+
+### 13.a LTX-2.5 (vídeo, Lightricks) — NO VIABLE EN LOCAL
+22B DiT vídeo+audio, open-weights. En Mac: pico ~50 GB RAM (tienes 36), bf16 ni cabe en disco,
+**sin port MLX para 2.5** (solo 2.3), y **bugs graves de MPS** (falla por nº de frames >65536 out
+channels; VAE de audio da NaN/Inf). Gratis = solo la LICENCIA (comercial libre si facturas <10 M$),
+NO la ejecución: habría que pagar GPU alquilada (Runpod) o API. Veredicto: solo cloud, no Mac.
+
+### 13.b MiniMax H3 / Hailuo 3.0 (vídeo) — NO-GO (hardware + LICENCIA)
+33B denso difusión, 15 s 2K + audio. Combo mínimo ~37 GB pesos → desborda 36 GB; ComfyUI, no
+LM Studio, sin MLX. 🚨 **Su licencia de pesos abiertos EXCLUYE la UE** (y UK/Corea/EEUU) → en
+España, descargar los pesos queda fuera de licencia. Única vía limpia: API (`minimax/hailuo-3`
+en OpenRouter, ~$0,13/s a 2K → ~1,30$/10 s). No compite con el stack de texto.
+
+### 13.c Muse Glimmer (Meta, agéntico) — TESTADO, semilla (bloqueo de ecosistema)
+~29,6B denso, multimodal entrada (texto+imagen), Apache-2.0. GGUF Q4_K_M 16,8 GB + mmproj visión
+(`lmstudio-community/Muse-Glimmer-30B-GGUF`). Cargó bien (8,4 s, 16,9 GB, 16K ctx, ~20 tok/s).
+**El modelo es capaz:** silogismo correcto, JSON exacto, y en tool-calling **eligió la función y
+args correctos**. PERO usa protocolo propio **ATEM** (canales `to=self`/`to=<tool>`) y el runtime
+de LM Studio (llama.cpp 2.29.1) **NO lo parsea** → por la API estándar el razonamiento se filtra
+como texto y las tool_calls NO salen en el campo `tool_calls` (quedan como `<atem:invoke>` crudo).
+Como TODO el stack consume por la API OpenAI (LiteLLM→enrutador→hermes), su función estrella es
+inservible hoy sin un shim ATEM→OpenAI. Extra: "piensa mucho" (razonamiento largo tipo R1).
+**Veredicto: NO integrar; 🌱 SEMILLA.** Disparador: cuando LM Studio (llama.cpp/MLX) añada parseo
+ATEM (como pasó con gpt-oss "harmony"). Pesos BORRADOS (17 GB liberados; re-descarga en ~5 min).
