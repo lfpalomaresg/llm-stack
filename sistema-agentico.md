@@ -321,3 +321,18 @@ verboso). Corrige mi afirmación previa «GLM-5.3 es 3× más caro» — medido,
 `litellm.config.yaml.bak.20260828-glm53`. Doctrina actualizada en opencode.json,
 JERARQUIA_IA.md, REGLAS_ENRUTAMIENTO.md. Ambos aliases verificados con llamada real.
 Frontera de datos intacta: cloud = solo escalado NO sensible. Báscula: `bench-coder-or.py`.
+
+## 12. Visión local sin atranques — vision-local.py (2026-08-30)
+
+hermes entró en bucle de reintentos analizando imágenes. **Causa real: el NÚMERO de
+imágenes, no el tamaño** — pasar ~8 capturas (pequeñas, 1008×511) en una sola petición
+satura el contexto del 35B (cada imagen se trocea en tiles → decenas de miles de tokens →
+rebasa 32k → timeout → reintenta). Una imagen sola se lee en ~6 s. Diagnóstico inicial
+(imágenes «grandes») refutado al medir las dimensiones reales.
+
+**Fix: `~/llm-stack/vision-local.py`** — procesa DE UNA EN UNA (una petición por imagen) +
+redimensiona a MAXPX (1568) antes de enviar. Default `local-general` (35B, LOCAL → apto para
+revenue/datos sensibles). Validado con 2 tablas de revenue reales: leídas bien, 10,9 s, sin
+atranque. hermes aprende la vía en su SOUL.md (§Imágenes): nunca mandar imágenes crudas al
+modelo. Nota operativa: pausar el gateway de hermes exige `launchctl disable`+`bootout` (tiene
+KeepAlive; matar el PID no basta) — reactivar con `enable`+`bootstrap`.
