@@ -12,6 +12,9 @@ model_list:
 
   - model_name: local-general
     litellm_params:
+      # FIX 2026-09-06 (drift confirmado por operador): local-general debe ser el
+      # ORQUESTADOR 35B (así lo dice sistema-agentico.md §1), no el 8B. Una edición
+      # intermedia lo dejó en qwen3-8b y el 35B quedó huérfano (sin alias). Restaurado.
       model: openai/qwen3.6-35b-a3b
       api_base: http://localhost:1234/v1
       api_key: lm-studio
