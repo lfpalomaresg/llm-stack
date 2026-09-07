@@ -53,6 +53,31 @@ model_list:
       api_base: http://localhost:1234/v1
       api_key: lm-studio
 
+  # ── Revisión / razonamiento local (2026-09-07) ─────────────────
+  # gpt-oss-20b (OpenAI, clase o3-mini): 2o worker de razonamiento agentico/tool-use
+  # Y revisor primario de la CAPA 1 del careo local. Familia != Qwen/Gemma. Carga JIT.
+  - model_name: local-reasoner
+    litellm_params:
+      model: openai/openai/gpt-oss-20b
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
+  # Phi-4-reasoning-plus (Microsoft): revisor dedicado NO-Qwen de la Capa 1 del careo
+  # (voto de linaje independiente). Denso 14B, ~8GB. Carga JIT.
+  - model_name: local-reviewer-ms
+    litellm_params:
+      model: openai/phi-4-reasoning-plus-mlx
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
+  # Josiefied-Qwen3-30B-A3B abliterado (MoE): generalista SIN FRENOS, bajo demanda.
+  # 100% local => frontera intacta. Carga JIT, NUNCA residente. Uso: brainstorm/red-team propio.
+  - model_name: local-uncensored
+    litellm_params:
+      model: openai/josiefied-qwen3-30b-a3b-abliterated-v2
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
   # ── GRATIS vía Antigravity CLI (agy-bridge, localhost:4010) ────
   # agy no tiene modo servidor — agy-bridge.py es un puente HTTP compatible
   # con OpenAI que lo expone como modelo de verdad (21/08). Necesario para que
@@ -99,10 +124,31 @@ model_list:
       model: openrouter/qwen/qwen3-coder-next  # $0.12/$0.80 por M · 262k ctx
       api_key: os.environ/OPENROUTER_API_KEY
 
-  # Trigger: comando explícito tipo /repo-audit (repo entero + logs)
+  # Trigger: comando explícito tipo /repo-audit (repo entero + logs).
+  # 2026-09-07 (OK operador): megacontext por defecto -> DeepSeek-V4-Pro
+  # ($0.617/$1.233, 1M ctx), ~12x mas barato que Kimi-K3 en output y ademas razona+codifica.
   - model_name: cloud-megacontext
     litellm_params:
-      model: openrouter/moonshotai/kimi-k3     # $3/$15 por M · 1M ctx
+      model: openrouter/deepseek/deepseek-v4-pro   # $0.617/$1.233 por M · 1M ctx
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Techo multimodal duro / long-horizon (la opcion de 1M mas cara del tablero; solo cuando toque).
+  - model_name: cloud-megacontext-max
+    litellm_params:
+      model: openrouter/moonshotai/kimi-k3         # $3/$15 por M · 1M ctx
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Coder de VALOR (default de escalado): mismo V4-Pro, intent codigo. GLM-5.3 (cloud-coder)
+  # queda solo para lo mas duro. ~3.5x mas barato en output que GLM-5.3.
+  - model_name: cloud-coder-value
+    litellm_params:
+      model: openrouter/deepseek/deepseek-v4-pro   # $0.617/$1.233 por M · 1M ctx
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  # Razonamiento / mates barato (hueco que faltaba). Tier pesado = cloud-megacontext (V4-Pro).
+  - model_name: cloud-reasoning
+    litellm_params:
+      model: openrouter/deepseek/deepseek-v3.2     # $0.269/$0.400 por M · 164k ctx
       api_key: os.environ/OPENROUTER_API_KEY
 
   # Trigger: vídeo / docs visuales que local-general no resuelve

@@ -365,3 +365,54 @@ Como TODO el stack consume por la API OpenAI (LiteLLM→enrutador→hermes), su 
 inservible hoy sin un shim ATEM→OpenAI. Extra: "piensa mucho" (razonamiento largo tipo R1).
 **Veredicto: NO integrar; 🌱 SEMILLA.** Disparador: cuando LM Studio (llama.cpp/MLX) añada parseo
 ATEM (como pasó con gpt-oss "harmony"). Pesos BORRADOS (17 GB liberados; re-descarga en ~5 min).
+
+## 14. Revisión de entorno agéntico con el operador — 2026-09-06
+
+### 14.a Fix aplicado: orquestador restaurado
+`local-general` apuntaba a `qwen3-8b` (drift de una edición intermedia); el 35B orquestador
+quedó huérfano sin alias. **Restaurado a `qwen3.6-35b-a3b`** y verificado por `/model/info`.
+Backup `litellm.config.yaml.bak.20260906-general35b`. Commit `f782ceb`.
+Nota: el 35B tiene modo *thinking* activo (razona ~500 tokens antes de responder).
+
+### 14.b Roster local — confirmado ÓPTIMO para 36 GB (investigación sept-2026)
+Nada bate al 35B-A3B (orquestador+visión) ni al Coder-30B-A3B dentro de 36 GB. Los sucesores
+reales no caben: Qwen3-Coder-Next (44,8 GB @4bit + ~2× lento), GLM-4.6/5 (357-744B server),
+MiniMax-M2/Ling/Ring (server). **Qwen4 NO ha salido** (solo preview 125B-A6B, pide 256 GB).
+El próximo salto real = Qwen4 estable. Mantener el núcleo.
+
+### 14.c Altas locales APROBADAS (pendiente descargar + medir)
+- **gpt-oss-20b** (MXFP4 ~12 GB, MLX+GGUF): 2º worker de razonamiento agéntico/tool-use (clase
+  o3-mini, GPQA/AIME fuertes). **NO reemplaza al R1-8B** — R1 sigue para el fan-out ×4 matemático
+  (4,6 GB, mejor para paralelo); gpt-oss para razonamiento pesado. Coexisten.
+- **local-uncensored** = `mlx-community/Josiefied-Qwen3-30B-A3B-abliterated-v2-4bit` (MLX ~17 GB,
+  MoE): abliterado, carga JIT bajo demanda (nunca residente). Uso local sin freno (frontera intacta).
+  Alternativas: mlabonne (GGUF, provenance de referencia) · huihui-2507 (GGUF, base más nueva).
+
+### 14.d Mejoras CLOUD APROBADAS (pendiente editar litellm.config.yaml)
+Precios verificados en vivo (API OpenRouter, sept-2026). El campo chino corre 3-20× más barato
+que Claude/GPT/Gemini para capacidad comparable.
+1. 🔴 **cloud-megacontext: Kimi-K3 ($3/$15) → `deepseek/deepseek-v4-pro` ($0.627/$1.254, 1M ctx)**
+   — ~12× más barato, razona+codifica. Kimi-K3 es la opción de 1M MÁS CARA del tablero; queda solo
+   como techo multimodal duro (alias aparte o nota).
+2. 🟢 **Añadir `cloud-reasoning` = `deepseek/deepseek-v3.2` ($0.269/$0.40)** — hueco de razonamiento/
+   mates, valor brutal. Tier pesado = deepseek-v4-pro o qwen3-max-thinking.
+3. 🟢 **Añadir coder de valor = `deepseek/deepseek-v4-pro`** como default barato de escalado; GLM-5.3
+   (`cloud-coder`) queda solo para lo más duro. cloud-coder-flash / -next / -vision se MANTIENEN.
+4. 🇪🇺 **Europeos: NO por OpenRouter** (pierde en precio/calidad vs chinos, y la soberanía UE —único
+   argumento— OpenRouter no la da: enruta a terceros USA). **Semilla:** Mistral La Plateforme UE
+   directo (DPA, residencia UE) como capa intermedia para dato SEMI-sensible, alias aparte NO-OpenRouter.
+
+**Estado:** aprobado por el operador 2026-09-06. Pendiente de aplicar (local: descargar+medir; cloud:
+editar config) — se hace al cierre de la revisión, tras el Bloque D (diseño careo dos capas).
+
+### 14.e IMPLEMENTADO — 2026-09-07 (modo autónomo, OK operador)
+- **Cloud aplicado** (litellm.config): cloud-megacontext→deepseek-v4-pro · +cloud-megacontext-max
+  (kimi techo) · +cloud-coder-value (v4-pro) · +cloud-reasoning (deepseek-v3.2). Verificado /model/info.
+- **Modelos locales bajados y validados en vivo:** gpt-oss-20b (`local-reasoner`), Phi-4-reasoning-plus
+  (`local-reviewer-ms`), Josiefied-Qwen3-30B-A3B abliterado (`local-uncensored`). Los 3 cargan y
+  responden por su alias. Granite-4-h-tiny SALTADO (se atascaba en HF; opcional, Gemma cubre el rol).
+- **Careo dos capas IMPLEMENTADO:** `careo-local.py` + Paso 0.5 en la skill. **Validado con dogfood**:
+  gpt-oss(13s)+Phi(45s) cazaron 2/2 un ZeroDivisionError plantado + el test vacío. Capa 1 funciona.
+- Backups: litellm.config.yaml.bak.20260907-{deepseek,reviewers} · .bak.20260906-general35b.
+- Pendiente menor: subir max_tokens de Phi en careo-local.py (es muy verboso). Bench formal gpt-oss
+  vs R1 como 2o worker (validado cualitativo: responde y revisa bien; falta el número).
