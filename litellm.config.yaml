@@ -19,11 +19,9 @@ model_list:
       api_base: http://localhost:1234/v1
       api_key: lm-studio
 
-  - model_name: local-fast
-    litellm_params:
-      model: openai/qwen3-8b
-      api_base: http://localhost:1234/v1
-      api_key: lm-studio
+  # local-fast (qwen3-8b) JUBILADO 2026-09-08 (OK operador): redundante con
+  # local-worker (DeepSeek-R1-0528-Qwen3-8B), que razona mejor por el mismo coste
+  # de RAM (~4.6 GB). Un 8B basta; no hacen falta dos. Backup: .bak.20260908-retire8b.
 
   - model_name: local-embed
     litellm_params:

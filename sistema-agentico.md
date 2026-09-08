@@ -11,7 +11,7 @@
 |---|---|---|---|---|---|
 | **Orquestador** | `local-general` | Qwen3.6-35B-A3B (MoE, ~3B activos, visión) | 20,4 GB | **32k** en perfil AGENTE · 48k en GENERAL | Siempre que hay orquestación local |
 | **Workers ×N** | `local-worker` | DeepSeek-R1-0528-Qwen3-8B (razonamiento R1) | 4,6 GB | 16k | Tareas acotadas delegadas; hasta 4 en paralelo sobre UNA carga |
-| **Utility** | `local-fast` | Qwen3-8B | 4,6 GB | 24k | Commits, resúmenes, clasificar (legado; el worker R1 puede absorberlo) |
+| ~~**Utility**~~ | ~~`local-fast`~~ | ~~Qwen3-8B~~ | — | — | **JUBILADO 2026-09-08** (OK operador): redundante con `local-worker` (R1-8B, mismo coste de RAM y razona mejor). Ver §15 |
 | **Coder titular** | `local-coder` | Qwen3-Coder-30B-A3B (MoE) | 17,2 GB | **32k** (bajado de 48k: es el que petó el 02/08) | Sesiones de código — perfil CODE, por swap |
 | **Auditor titular** | `auditor-free`† | gpt-oss-120b (agy, gratis) → GLM-5.3 si falla | 0 GB | 1M | Revisión por defecto: gratis primero, GLM de red. Validado 3/3 con bugs sembrados (21/08) |
 | **Auditor sensible** | `local-auditor` | gemma-4-E4B-it OptiQ 4bit (Google) | ~4-5 GB | 8k | Datos que no salen del Mac. Familia ≠ Qwen ⇒ cumple "revisor ≠ productor". Carga JIT |
@@ -416,3 +416,49 @@ editar config) — se hace al cierre de la revisión, tras el Bloque D (diseño 
 - Backups: litellm.config.yaml.bak.20260907-{deepseek,reviewers} · .bak.20260906-general35b.
 - Pendiente menor: subir max_tokens de Phi en careo-local.py (es muy verboso). Bench formal gpt-oss
   vs R1 como 2o worker (validado cualitativo: responde y revisa bien; falta el número).
+
+## 15. Consolidación del entorno + arquitectura del orquestador — 2026-09-08 (OK operador)
+
+**Problema raíz diagnosticado:** hermes arrancaba en `local-general` (35B, 20,4 GB) y opencode en
+`local-coder` (Coder-30B, 17,2 GB). 20,4+17,2 = **37,6 GB > 36** → nunca caben juntos; cambiar de
+herramienta forzaba un swap de un modelo grande (1-2 min) y rozaba la regla de la sala.
+
+**Arquitectura decidida — UN solo cerebro local compartido:**
+- **Orquestador único = 35B** (`local-general`), compartido por hermes **y** opencode. opencode
+  recableado de `local-coder`→`local-general` (`~/.config/opencode/opencode.json`). Así solo hay
+  **un grande residente a la vez** sea cual sea la herramienta; el swap ocurre al cambiar de *tarea*
+  (orquestar↔codear duro local), no de *herramienta*.
+- **Coder-30B pasa a swap JIT bajo demanda** (como los revisores), no residente por defecto.
+- **"Segundo coder en paralelo" = CLOUD** (`cloud-coder-value` = DeepSeek-V4-Pro, 0 GB RAM local,
+  ~$0.62/$1.23 M). Ningún coder local grande cabe junto al 35B → el paralelo real es cloud, salvo
+  **código sensible** (frontera): ahí se acepta el swap al Coder-30B local.
+- **Descartado** Claude/obliterated como orquestador permanente: Claude rompe la frontera con dato
+  sensible Soho; Josiefied (17,2 GB, mismo problema de RAM y peor seguimiento de instrucciones por
+  la abliteración) se queda en su papel de uncensored/red-team bajo demanda.
+
+**Mito corregido:** montar el 35B permanentemente NO preserva "el hilo" de las tareas — el contexto
+se reenvía entero en cada petición; el hilo vive en el CLIENTE (historial de hermes/opencode/Claude
+Code), no en la RAM del modelo. Montar solo ahorra latencia de recarga.
+
+**Cambios aplicados:**
+- **`local-fast` (Qwen3-8B) JUBILADO** de litellm + opencode + hermes; descargado de RAM (−4,6 GB).
+  Redundante con `local-worker` (R1-8B). 19 aliases activos (antes 20). Backup `.bak.20260908-retire8b`.
+- **Careo dos VELOCIDADES + grupos de carga** (`careo-local.py` reescrito). Verdad de RAM medida:
+  dos revisores medianos (~20 GB) NO caben con el 35B residente → el careo **evicta el 35B**
+  (`lms unload --all`) antes de la pasada. `rutina` = gpt-oss+Gemma (16 GB) · `duro` = gpt-oss+Phi
+  (20 GB) · `--red-team` = Josiefied en pasada SERIE (evicta el par antes). El 35B sale del rol de
+  revisor rutinario. **Verificado en vivo** (2:04, `--duro --red-team`): gpt-oss 20s + Phi 85s = 2/2
+  + Josiefied 13s ✅; el HTTP 400 de RAM que salía antes con el 35B residente DESAPARECIÓ. max_tokens
+  de Phi subido a 3000 (ya no se corta). Bug `\n` literal corregido.
+
+**hermes — limpieza (mantenido por decisión del operador, unificado al 35B):**
+- **WhatsApp desactivado** (`.env WHATSAPP_ENABLED=false`): estaba activado-sin-emparejar y metía al
+  gateway en bucle de caída (`non-retryable startup conflict`). Gateway ahora ESTABLE.
+- **Telegram auto-responder desactivado** (`config.yaml platforms.telegram.enabled=false`): cada
+  mensaje entrante disparaba el 35B (era parte del "auto-disparo" sorpresa). Reactivar poniendo true.
+- **3 crons de radar de competencia Soho re-PAUSADOS** (Málaga/Granada/Ronda): estaban ACTIVOS y
+  disparándose a diario a las 09:00 **contra la orden** de crons pausados desde 22/08. Eran la ráfaga
+  que martilleaba el 35B. Pendiente decisión del operador: reactivarlos (revenue management) o dejar.
+- ⚠️ Token del bot de Telegram en plaintext en `~/.hermes/gateway_state.json` — revocar en @BotFather
+  si el bot ya no se usa.
+- Backups: `config.yaml.bak.20260908-unify-notelegram` · `.env.bak.20260908` · `opencode.json.bak.20260908-unify35b`.
