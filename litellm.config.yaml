@@ -87,11 +87,8 @@ model_list:
       api_base: http://localhost:4010/v1
       api_key: agy-bridge
 
-  - model_name: gemini-free
-    litellm_params:
-      model: openai/gemini-free
-      api_base: http://localhost:4010/v1
-      api_key: agy-bridge
+  # gemini-free RETIRADO 2026-09-08 (OK operador): fiabilidad medida 25% en el log;
+  # auditor-free + gpt-oss-free cubren lo NO sensible. (agy-bridge aún lo expone; alias fuera.)
 
   - model_name: auditor-free
     litellm_params:
@@ -116,11 +113,8 @@ model_list:
       model: openrouter/z-ai/glm-5.3-flash     # $0.075/$0.25 por M · rey del valor (mas lento)
       api_key: os.environ/OPENROUTER_API_KEY
 
-  # Alternativa de escalado ultra-barata (el 80B que no cabe local)
-  - model_name: cloud-coder-next
-    litellm_params:
-      model: openrouter/qwen/qwen3-coder-next  # $0.12/$0.80 por M · 262k ctx
-      api_key: os.environ/OPENROUTER_API_KEY
+  # cloud-coder-next (Qwen3-Coder-Next 80B) RETIRADO 2026-09-08 (OK operador): apenas
+  # se usaba; cloud-coder-value (V4-Pro) cubre el escalado barato y cloud-coder (GLM-5.3) lo duro.
 
   # Trigger: comando explícito tipo /repo-audit (repo entero + logs).
   # 2026-09-07 (OK operador): megacontext por defecto -> DeepSeek-V4-Pro

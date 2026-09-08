@@ -462,3 +462,27 @@ Code), no en la RAM del modelo. Montar solo ahorra latencia de recarga.
 - ⚠️ Token del bot de Telegram en plaintext en `~/.hermes/gateway_state.json` — revocar en @BotFather
   si el bot ya no se usa.
 - Backups: `config.yaml.bak.20260908-unify-notelegram` · `.env.bak.20260908` · `opencode.json.bak.20260908-unify35b`.
+
+### §15.a Simplificaciones + accionables 360 (misma sesión 08/09, OK operador)
+- **qwen3-8b BORRADO del disco** (4,3 GB liberados) y `stack.sh` `FAST="$WORKER"` → un solo 8B en
+  todo el stack (R1-8B) en CODE/GENERAL/LIGERO. Cruce anti-8B+8B retirado (ya no aplica). test-ram 10/10.
+- **cloud-coder-next (Qwen3-Coder-Next 80B) RETIRADO** (apenas usado; V4-Pro cubre el escalado barato).
+- **gemini-free RETIRADO** (fiabilidad 25% en el log; auditor-free+gpt-oss-free bastan). → **17 aliases**.
+- Etiqueta `cloud-megacontext` corregida en opencode.json (Kimi→V4-Pro).
+- **Guard de crons de hermes** (`guard-hermes-crons.sh` + LaunchAgent `com.luisfran.hermes-cron-guard`,
+  diario 09:30 + al arrancar): avisa por notificación si algún cron aparece ACTIVO contra la pausa.
+- **careo-local.py RECALIENTA** el grande previo (35B o Coder-30B) al terminar, en background —
+  vuelves al trabajo sin esperar la recarga. `--no-rewarm` para desactivarlo.
+- **mejora stack.sh 09-03 (TTL por perfil + recarga si ctx/ttl no coinciden) es GENÉRICA** (aplica al
+  35B/Coder/R1-8B, no al 8b jubilado) → commiteada aquí. Backups `.bak.20260908-simplify` (litellm).
+
+### §15.b Escaneo de orquestadores (2026-09-08) — un único candidato a batir el 35B
+Regla: ≤ ~22 GB de pesos 4-bit + holgura ⇒ total ≤ ~40-44B. Toda la ola 2026 potente (Qwen4-preview
+= Qwen3.8-Flash-Next 125B-A6B ~90 GB, GLM-4.5-Air 106B ~53 GB, MiniMax/Ling/Ring flash >100B, Kimi
+frontier) **NO CABE**. Qwen4 estable **no existe** aún. La franja 30-40B-MoE que cabe la monopoliza
+la propia familia `qwen3_5_moe`. **Único candidato con expectativa real de mejorar el orquestador:
+`Nex-N2-mini` (35B-A3B, `nex-agi`, jun-2026)** — MISMA arquitectura y footprint que el 35B (~20 GB,
+multimodal, MLX 4-bit + MTP disponible) pero **post-entrenado para AGENTES** (SWE-Bench 74,4 ·
+Terminal-Bench 60,7 · tool-use en bucle). Es un upgrade de *fineup*, no de talla → coste RAM idéntico.
+Ya estaba anotado como semilla el 28/08; ahora priorizado a benchar cara a cara vs el baseline. Si no
+mejora en careo real, el 35B sigue siendo el óptimo (resultado válido).

@@ -30,8 +30,11 @@ LOCKDIR=/tmp/llm-stack.lock
 
 CODER="qwen3-coder-30b-a3b-instruct-mlx"
 GENERAL="qwen3.6-35b-a3b"
-FAST="qwen3-8b"
 WORKER="deepseek/deepseek-r1-0528-qwen3-8b"   # workers ×N con razonamiento R1 (v5.4)
+# 2026-09-08 (OK operador): qwen3-8b JUBILADO y borrado del disco. FAST apunta ahora
+# al MISMO 8B que el worker (R1-8B) — un solo 8B en todo el stack. Se conserva la
+# variable FAST por compatibilidad con los perfiles (CODE/GENERAL/LIGERO usan "el pequeño").
+FAST="$WORKER"
 
 # ── Guarda: sin `lms` no se toca la RAM (evita falsos "no hay nada cargado") ──
 _require_lms() {
@@ -61,6 +64,21 @@ _unlock() { llm_lock_soltar "$LOCKDIR"; }
 
 _loaded() { lms ps 2>/dev/null | awk 'NR>1 && NF>3 {print $1}' | grep -qx "$1"; }
 
+# Lee de `lms ps` el contexto y el TTL TOTAL (no el restante) del modelo $1,
+# ya cargado. Columnas de `lms ps`: IDENTIFIER MODEL STATUS SIZE_NUM SIZE_UNIT
+# CONTEXT PARALLEL DEVICE TTL_restante / TTL_total → $6 y $NF respectivamente.
+_ctx_cargado() { lms ps 2>/dev/null | awk -v m="$1" 'NR>1 && $1==m {print $6}'; }
+_ttl_total_cargado() {
+  local raw; raw=$(lms ps 2>/dev/null | awk -v m="$1" 'NR>1 && $1==m {print $NF}')
+  [ -z "$raw" ] && return 1
+  case "$raw" in
+    *h) echo $(( ${raw%h} * 3600 )) ;;
+    *m) echo $(( ${raw%m} * 60 )) ;;
+    *s) echo "${raw%s}" ;;
+    *)  echo "$raw" ;;
+  esac
+}
+
 _otro_grande_en_ram() {  # $1 = el grande que quiero; 0 si HAY otro distinto cargado
   local otro
   for otro in "$CODER" "$GENERAL"; do
@@ -70,18 +88,36 @@ _otro_grande_en_ram() {  # $1 = el grande que quiero; 0 si HAY otro distinto car
 }
 
 # Carga verificada: si falla, lo dice y devuelve error (antes cantaba éxito igual)
-_cargar() {  # $1 = modelo, $2 = contexto
-  _loaded "$1" && return 0
-  lms load "$1" --context-length "$2" --ttl 7200 -y >/dev/null 2>&1
-  if _loaded "$1"; then return 0; fi
-  echo "ERROR: no se pudo cargar '$1' (¿RAM insuficiente? ¿otro modelo grande cargado?)" >&2
+# 2026-09-03: si el modelo YA está cargado pero con otro ctx/ttl (venías de
+# otro perfil, p.ej. AGENTE→GENERAL), antes se dejaba tal cual — el perfil
+# nuevo "mentía" en pantalla. Ahora se compara y, si no coincide, se recarga.
+_cargar() {  # $1 = modelo, $2 = contexto, $3 = ttl en segundos (opcional, def. 7200 = 2h)
+  local modelo="$1" ctx="$2" ttl="${3:-7200}"
+  if _loaded "$modelo"; then
+    local ctx_actual ttl_actual
+    ctx_actual=$(_ctx_cargado "$modelo")
+    ttl_actual=$(_ttl_total_cargado "$modelo")
+    if [ "$ctx_actual" = "$ctx" ] && [ "$ttl_actual" = "$ttl" ]; then
+      return 0   # ya está con los parámetros correctos, nada que hacer
+    fi
+    lms unload "$modelo" 2>/dev/null   # cargado con otro perfil: recargar limpio
+  fi
+  lms load "$modelo" --context-length "$ctx" --ttl "$ttl" -y >/dev/null 2>&1
+  if _loaded "$modelo"; then return 0; fi
+  echo "ERROR: no se pudo cargar '$modelo' (¿RAM insuficiente? ¿otro modelo grande cargado?)" >&2
   return 1
 }
 
 # Cambio de perfil protegido: no desaloja un grande en uso salvo FORCE=1
 # $3 = ctx del grande (def. 49152) · $4 = modelo pequeño (def. $FAST) · $5 = su ctx (def. 24576)
+# $6 = ttl del grande (def. 7200) · $7 = ttl del pequeño (def. 7200)
+# 2026-09-03: TTL más corto para AGENTE (ver caso "agente)" más abajo) — los 3
+# modelos de ese perfil (~30GB) dejados IDLE mucho rato empujaron el swap al
+# límite (incidente medido: 11,78/12GB de swapfile en <2h). CODE/GENERAL se
+# usan a diario y se quedan en 2h a propósito (recargar cada poco penaliza más
+# de lo que ahorra en RAM cuando SÍ se están usando).
 _perfil() {  # $1 = grande a cargar (o "" para ligero)
-  local grande="$1" ctx_g="${3:-49152}" peque="${4:-$FAST}" ctx_p="${5:-24576}"
+  local grande="$1" ctx_g="${3:-49152}" peque="${4:-$FAST}" ctx_p="${5:-24576}" ttl_g="${6:-7200}" ttl_p="${7:-7200}"
   if [ -n "$grande" ] && _otro_grande_en_ram "$grande" && [ "${FORCE:-0}" != "1" ]; then
     echo "⚠️  Hay otro modelo grande cargado (posible sesión de opencode/hermes en curso)."
     echo "   No lo desalojo. Si de verdad quieres cambiar de perfil: FORCE=1 stack.sh $2"
@@ -92,13 +128,10 @@ _perfil() {  # $1 = grande a cargar (o "" para ligero)
     "$GENERAL") lms unload "$CODER"   2>/dev/null ;;
     "")         lms unload "$CODER" 2>/dev/null; lms unload "$GENERAL" 2>/dev/null ;;
   esac
-  # El pequeño que NO toca en este perfil se descarga (evita sumar 8B+8B)
-  case "$peque" in
-    "$FAST")   lms unload "$WORKER" 2>/dev/null ;;
-    "$WORKER") lms unload "$FAST"   2>/dev/null ;;
-  esac
-  [ -n "$grande" ] && { _cargar "$grande" "$ctx_g" || return 1; }
-  _cargar "$peque" "$ctx_p" || return 1
+  # 2026-09-08: ya solo hay UN 8B (FAST==WORKER=R1-8B), no hay riesgo de 8B+8B →
+  # el cruce de descarga anterior sobra. _cargar ya no recarga si ya está con sus params.
+  [ -n "$grande" ] && { _cargar "$grande" "$ctx_g" "$ttl_g" || return 1; }
+  _cargar "$peque" "$ctx_p" "$ttl_p" || return 1
   return 0
 }
 
@@ -144,8 +177,10 @@ case "$1" in
     ;;
   agente)
     _require_lms; _lock 60 || exit 4
-    _perfil "$GENERAL" agente 32768 "$WORKER" 16384 \
-      && echo "Perfil AGENTE activo (35B orquestador 32k + R1-8B workers 16k · auditor: GLM cloud / gemma JIT)"
+    # TTL 30min (1800s) para ambos — perfil de ráfaga, no de uso continuo
+    # (incidente 2026-09-03: dejado IDLE con TTL de 2h llenó el swap).
+    _perfil "$GENERAL" agente 32768 "$WORKER" 16384 1800 1800 \
+      && echo "Perfil AGENTE activo (35B orquestador 32k + R1-8B workers 16k, TTL 30min · auditor: GLM cloud / gemma JIT)"
     ;;
   ligero)
     _require_lms; _lock 60 || exit 4
