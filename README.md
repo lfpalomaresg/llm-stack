@@ -13,11 +13,19 @@ historial de incidentes.
 
 ## En una frase
 
-Seis modelos MLX cuantizados servidos por [LM Studio](https://lmstudio.ai/),
-unificados detrás de un proxy [LiteLLM](https://www.litellm.ai/) con API
-compatible OpenAI, con roles agénticos fijos (orquestador, workers en
-paralelo, auditor) y cuatro modelos de refuerzo en [OpenRouter](https://openrouter.ai/)
-que solo entran por señal objetiva — nunca en silencio.
+Una **arquitectura agéntica canónica**: los **roles** (orquestador, coder, workers,
+revisores, red-team, RAG) son fijos y se sirven tras una **capa de alias única**
+([LiteLLM](https://www.litellm.ai/), API compatible OpenAI); el **modelo** que cumple
+cada rol es **enchufable** — cualquier frontera, local o cloud, entra repuntando su alias.
+Hoy: modelos MLX cuantizados en [LM Studio](https://lmstudio.ai/) para los roles locales
+(orquestador **Nex-N2-mini**, coder, workers R1, revisores de linajes distintos, red-team
+abliterado) + refuerzos en [OpenRouter](https://openrouter.ai/) que solo entran por señal
+objetiva — nunca en silencio.
+
+> **Canónico y portable:** cambiar el modelo de un rol = editar una línea en
+> `litellm.config.yaml`, cero cambios en los clientes. Demostrado el 2026-09-08: el
+> orquestador pasó de Qwen3.6-35B a Nex-N2-mini sin tocar hermes/opencode/enrutador.
+> La arquitectura no depende de ningún modelo concreto.
 
 ## Uso
 
@@ -33,7 +41,7 @@ basta con pedirlo en lenguaje natural:
 | Quieres... | Qué decir |
 |---|---|
 | Consulta rápida a un modelo local sin gastar tokens de Claude | *"Pregúntale a local-fast que resuma esto"* |
-| Probar un modelo concreto del catálogo de OpenRouter | *"Pregúntale a z-ai/glm-5.2 qué opina de X"* |
+| Probar un modelo concreto del catálogo de OpenRouter | *"Pregúntale a z-ai/glm-5.3 qué opina de X"* |
 | Ver qué alias locales hay disponibles | *"¿Qué modelos locales tienes disponibles?"* |
 
 ⚠️ Nunca mandar datos sensibles del trabajo a `ask_openrouter_model` — sale

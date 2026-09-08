@@ -29,7 +29,9 @@ PIDFILE=~/llm-stack/litellm.pid
 LOCKDIR=/tmp/llm-stack.lock
 
 CODER="qwen3-coder-30b-a3b-instruct-mlx"
-GENERAL="qwen3.6-35b-a3b"
+# ORQUESTADOR. 2026-09-08: Nex-N2-mini (35B-A3B nex-agi, afinado agentic) sustituye al
+# Qwen3.6-35B. El 35B sigue en disco: revertir = GENERAL="qwen3.6-35b-a3b".
+GENERAL="nex-n2-mini-local"
 WORKER="deepseek/deepseek-r1-0528-qwen3-8b"   # workers ×N con razonamiento R1 (v5.4)
 # 2026-09-08 (OK operador): qwen3-8b JUBILADO y borrado del disco. FAST apunta ahora
 # al MISMO 8B que el worker (R1-8B) — un solo 8B en todo el stack. Se conserva la
@@ -173,14 +175,14 @@ case "$1" in
     ;;
   general)
     _require_lms; _lock 60 || exit 4
-    _perfil "$GENERAL" general && echo "Perfil GENERAL activo (35B multimodal 48k + fast 24k)"
+    _perfil "$GENERAL" general && echo "Perfil GENERAL activo (Nex-N2-mini multimodal 48k + R1-8B 24k)"
     ;;
   agente)
     _require_lms; _lock 60 || exit 4
     # TTL 30min (1800s) para ambos — perfil de ráfaga, no de uso continuo
     # (incidente 2026-09-03: dejado IDLE con TTL de 2h llenó el swap).
     _perfil "$GENERAL" agente 32768 "$WORKER" 16384 1800 1800 \
-      && echo "Perfil AGENTE activo (35B orquestador 32k + R1-8B workers 16k, TTL 30min · auditor: GLM cloud / gemma JIT)"
+      && echo "Perfil AGENTE activo (Nex-N2-mini orquestador 32k + R1-8B workers 16k, TTL 30min · auditor: GLM cloud / gemma JIT)"
     ;;
   ligero)
     _require_lms; _lock 60 || exit 4

@@ -1,4 +1,4 @@
-<title>Stack Agéntico v5.4</title>
+<title>Stack Agéntico v5.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -133,14 +133,14 @@
 <div class="wrap">
   <header>
     <div class="kicker"><span class="dot"></span> Entorno agéntico local-first &nbsp;·&nbsp; Mac M4 Max · 36 GB</div>
-    <h1>Stack Agéntico v5.4</h1>
-    <p class="lede"><b>19 alias</b> en tres capas —local, gratis y cloud— detrás de <b>un solo endpoint</b>. Un único cerebro local (el 35B) orquesta para todas las herramientas; lo mecánico y sensible se resuelve en la máquina y solo se escala fuera por señal objetiva.</p>
+    <h1>Stack Agéntico v5.5</h1>
+    <p class="lede"><b>Arquitectura canónica</b>: los <b>roles</b> (orquestador, coder, workers, revisores, red-team, RAG) son fijos; el <b>modelo</b> que cumple cada rol es <b>enchufable</b> tras una capa de alias única. Cualquier frontera —local o cloud— entra repuntando su alias. <b>19 alias</b> en tres capas detrás de un solo endpoint; lo sensible se queda en la máquina y solo se escala fuera por señal objetiva.</p>
     <div class="meta">
       <span><b>Gateway</b> LiteLLM · :4000</span>
       <span><b>Local</b> LM Studio · :1234</span>
       <span><b>Gratis</b> agy-bridge · :4010</span>
       <span><b>Cloud</b> OpenRouter</span>
-      <span><b>Foto</b> 2026-09-08</span>
+      <span><b>Foto</b> 2026-09-09</span>
     </div>
   </header>
 
@@ -148,7 +148,7 @@
   <section>
     <div class="sec-h"><span class="n">01</span><h2>Cómo fluye una petición</h2><span class="rule"></span></div>
     <figure>
-      <svg viewBox="0 0 920 560" role="img" aria-label="Diagrama: los orquestadores de software llaman a un único endpoint LiteLLM en el puerto 4000, que reparte a tres capas — local en LM Studio, gratis en agy-bridge y cloud en OpenRouter. hermes y opencode comparten el mismo cerebro local (el 35B). Los datos sensibles no cruzan la frontera de la capa local. El escalado a cloud y a Codex/Gemini/Claude solo ocurre por señal objetiva.">
+      <svg viewBox="0 0 920 560" role="img" aria-label="Diagrama: los orquestadores de software llaman a un único endpoint LiteLLM en el puerto 4000, que reparte a tres capas — local en LM Studio, gratis en agy-bridge y cloud en OpenRouter. hermes y opencode comparten el mismo orquestador local (hoy Nex-N2-mini). Los datos sensibles no cruzan la frontera de la capa local. El escalado a cloud y a Codex/Gemini/Claude solo ocurre por señal objetiva.">
         <defs>
           <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
@@ -156,7 +156,7 @@
         </defs>
 
         <!-- Row 1: consumers -->
-        <text x="46" y="30" font-family="IBM Plex Mono, monospace" font-size="11" letter-spacing="1.5" fill="var(--faint)">CAPA DE SOFTWARE · hermes + opencode COMPARTEN EL 35B</text>
+        <text x="46" y="30" font-family="IBM Plex Mono, monospace" font-size="11" letter-spacing="1.5" fill="var(--faint)">CAPA DE SOFTWARE · hermes + opencode COMPARTEN EL ORQUESTADOR</text>
         <g font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--ink)">
           <g>
             <rect x="46" y="42" width="118" height="34" rx="8" fill="var(--surface-2)" stroke="var(--line)"/>
@@ -216,14 +216,14 @@
         <text x="70" y="247" font-family="IBM Plex Sans, sans-serif" font-weight="700" font-size="14.5" fill="var(--local)">LOCAL · LM Studio</text>
         <text x="70" y="265" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--local)">:1234 · en el Mac · lo sensible</text>
         <g font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--ink)">
-          <text x="70" y="292">▸ local-general · 35B MoE ★</text>
+          <text x="70" y="292">▸ local-general · Nex ★</text>
           <text x="70" y="313">▸ local-coder · 30B MoE (swap)</text>
           <text x="70" y="334">▸ local-worker · R1-8B ×4</text>
           <text x="70" y="355">▸ local-auditor · Gemma-4</text>
           <text x="70" y="376">▸ local-embed · 0.6B</text>
           <text x="70" y="397">▸ + 3 revisores careo (JIT)</text>
         </g>
-        <text x="70" y="428" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--local)">★ orquestador único · hermes+opencode</text>
+        <text x="70" y="428" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--local)">★ orquestador (rol enchufable) · hoy Nex</text>
         <line x1="70" y1="444" x2="284" y2="444" stroke="var(--local)" stroke-width="1" stroke-dasharray="2 3" opacity="0.5"/>
         <text x="70" y="464" font-family="IBM Plex Sans, sans-serif" font-size="11.5" fill="var(--soft)">Un grande residente a la vez.</text>
         <text x="70" y="481" font-family="IBM Plex Sans, sans-serif" font-size="11.5" fill="var(--soft)">El careo evicta el 35B para</text>
@@ -270,31 +270,45 @@
         <text x="360" y="547" font-family="IBM Plex Mono, monospace" font-size="10.5" fill="var(--faint)">(tests en rojo 2-3× · no cabe · multimodal)</text>
         <text x="576" y="534" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--cloud)">OpenRouter → Codex / Gemini / Claude</text>
       </svg>
-      <figcaption>Los orquestadores de software (Claude Code, hermes, opencode…) nunca hablan con un modelo directamente: todos pasan por <b>LiteLLM :4000</b>, que traduce un alias a un modelo concreto. <b>hermes y opencode comparten ahora el mismo cerebro local (el 35B)</b> → un solo grande residente a la vez, sin choque de RAM. La <span style="color:var(--frontera)">frontera de datos</span> encierra la capa local: lo sensible se queda dentro. El salto a cloud —y de ahí a las IA de frontera— solo ocurre por una señal medible, nunca por defecto.</figcaption>
+      <figcaption>Los orquestadores de software (Claude Code, hermes, opencode…) nunca hablan con un modelo directamente: todos pasan por <b>LiteLLM :4000</b>, que traduce un alias a un modelo concreto. <b>hermes y opencode comparten el mismo orquestador local (hoy Nex-N2-mini)</b> → un solo grande residente a la vez, sin choque de RAM. La <span style="color:var(--frontera)">frontera de datos</span> encierra la capa local: lo sensible se queda dentro. El salto a cloud —y de ahí a las IA de frontera— solo ocurre por una señal medible, nunca por defecto.</figcaption>
     </figure>
   </section>
 
   <!-- ══ MODELOS ══ -->
   <section>
-    <div class="sec-h"><span class="n">02</span><h2>Los 19 alias · estructura y función</h2><span class="rule"></span></div>
+    <div class="sec-h"><span class="n">02</span><h2>Los 19 alias · estructura y función (instancia de hoy)</h2><span class="rule"></span></div>
     <div class="tiers">
 
       <!-- LOCAL -->
       <div class="tier local">
-        <div class="tier-head"><span class="tag">LOCAL · 8</span><span class="ep">LM Studio · :1234</span></div>
+        <div class="tier-head"><span class="tag">LOCAL · 10</span><span class="ep">LM Studio · :1234</span></div>
         <div class="tier-sub">En la máquina. Aptos para datos sensibles (frontera intacta).</div>
 
         <div class="m">
           <div class="m-top"><span class="m-alias">local-general</span><span class="m-role">Orquestador único</span></div>
+          <div class="m-real">Nex-N2-mini (35B-A3B · nex-agi) · visión</div>
+          <p class="m-fn">El orquestador compartido por hermes y opencode: descompone, delega, integra. Afinado para <b>agentes</b> (SWE-Bench 74,4 · Terminal-Bench 60,7) → salida directa sin volcar razonamiento, sigue formato estricto. Multimodal. Sustituyó al Qwen3.6-35B el 08/09 (bench VS ganado); el 35B queda como <code>local-35b</code> para revertir.</p>
+          <div class="chips"><span class="chip moe">MoE ~3B act.</span><span class="chip">35B-A3B</span><span class="chip">20,4 GB</span><span class="chip hero">agentic</span></div>
+        </div>
+
+        <div class="m">
+          <div class="m-top"><span class="m-alias">local-35b</span><span class="m-role">Orquestador anterior</span></div>
           <div class="m-real">Qwen3.6-35B-A3B · visión</div>
-          <p class="m-fn">El cerebro compartido por hermes y opencode: descompone, delega en los workers, integra. También es la visión local. Modo <em>thinking</em>. Siempre residente salvo durante un careo (que lo evicta para caber).</p>
-          <div class="chips"><span class="chip moe">MoE ~3B act.</span><span class="chip">35B</span><span class="chip">20,4 GB</span><span class="chip hero">cerebro único</span></div>
+          <p class="m-fn">El orquestador anterior, conservado en disco por si se revierte o para comparar. Es *thinking* (razona en voz alta), lo que lo hacía verboso como orquestador. Mismo footprint que Nex (20,4 GB).</p>
+          <div class="chips"><span class="chip moe">MoE ~3B act.</span><span class="chip">35B-A3B</span><span class="chip">20,4 GB</span><span class="chip">revertir</span></div>
+        </div>
+
+        <div class="m">
+          <div class="m-top"><span class="m-alias">local-fast</span><span class="m-role">Camino rápido</span></div>
+          <div class="m-real">= R1-8B (mismo modelo que local-worker)</div>
+          <p class="m-fn">Rol "rápido" (lookups, <code>/no_think</code>) que usa <code>enrutador-ia</code> como destino y degradado. El qwen3-8b se jubiló y borró; local-fast apunta ahora al mismo R1-8B — un solo 8B físico, dos puntos de entrada.</p>
+          <div class="chips"><span class="chip">denso · 8B</span><span class="chip">4,6 GB</span><span class="chip">rápido</span></div>
         </div>
 
         <div class="m">
           <div class="m-top"><span class="m-alias">local-coder</span><span class="m-role">Coder · swap JIT</span></div>
           <div class="m-real">Qwen3-Coder-30B-A3B · MLX 4-bit</div>
-          <p class="m-fn">Código serio en local, <b>por swap</b> (evicta al 35B). Instruct sin cadena de pensamiento → mucho más rápido que el 35B en código. Para código NO sensible en paralelo, el segundo coder es cloud (V4-Pro), no otro grande local.</p>
+          <p class="m-fn">Código serio en local, <b>por swap</b> (evicta al orquestador). Instruct sin cadena de pensamiento → mucho más rápido que el 35B en código. Para código NO sensible en paralelo, el segundo coder es cloud (V4-Pro), no otro grande local.</p>
           <div class="chips"><span class="chip moe">MoE ~3B act.</span><span class="chip">30B</span><span class="chip">17,2 GB</span><span class="chip">swap</span></div>
         </div>
 
@@ -343,7 +357,7 @@
 
       <!-- FREE -->
       <div class="tier free">
-        <div class="tier-head"><span class="tag">GRATIS · 3</span><span class="ep">agy-bridge · :4010</span></div>
+        <div class="tier-head"><span class="tag">GRATIS · 2</span><span class="ep">agy-bridge · :4010</span></div>
         <div class="tier-sub">Tier gratuito de cloud vía Antigravity CLI. NO para datos sensibles (sale del Mac).</div>
 
         <div class="m">
@@ -360,23 +374,17 @@
           <div class="chips"><span class="chip gratis">gratis</span><span class="chip">120B</span></div>
         </div>
 
-        <div class="m">
-          <div class="m-top"><span class="m-alias">gemini-free</span><span class="m-role">Alternativa free</span></div>
-          <div class="m-real">Gemini · vía agy</div>
-          <p class="m-fn">Segunda vía gratuita, familia distinta (Google) → útil como revisor cruzado o cuando gpt-oss no cuadra.</p>
-          <div class="chips"><span class="chip gratis">gratis</span><span class="chip">Google</span></div>
-        </div>
       </div>
 
       <!-- CLOUD -->
       <div class="tier cloud">
-        <div class="tier-head"><span class="tag">CLOUD · 8</span><span class="ep">OpenRouter · prepago</span></div>
+        <div class="tier-head"><span class="tag">CLOUD · 7</span><span class="ep">OpenRouter · prepago</span></div>
         <div class="tier-sub">De pago, por señal objetiva. Cada uno tiene su disparador y su nicho de coste.</div>
 
         <div class="m">
           <div class="m-top"><span class="m-alias">cloud-coder-value</span><span class="m-role">Coder de valor ★</span></div>
           <div class="m-real">deepseek/deepseek-v4-pro</div>
-          <p class="m-fn">Default de escalado y <b>el "segundo coder en paralelo"</b> que convive con el 35B (0 GB RAM local). Razona y codifica; ~20× más barato que Opus. ~3,5× más barato que GLM-5.3 en output.</p>
+          <p class="m-fn">Default de escalado y <b>el "segundo coder en paralelo"</b> que convive con el orquestador (0 GB RAM local). Razona y codifica; ~20× más barato que Opus. ~3,5× más barato que GLM-5.3 en output.</p>
           <div class="chips"><span class="chip pay">$0,62 / $1,23 M</span><span class="chip">1M ctx</span></div>
         </div>
 
@@ -392,13 +400,6 @@
           <div class="m-real">z-ai/glm-5.3-flash</div>
           <p class="m-fn">El rey del valor: 38× más barato por tarea que el viejo GLM-5.2, 6/6 en el bench. Más lento, pero para código no crítico compensa de sobra.</p>
           <div class="chips"><span class="chip pay">$0,075 / $0,25 M</span></div>
-        </div>
-
-        <div class="m">
-          <div class="m-top"><span class="m-alias">cloud-coder-next</span><span class="m-role">80B no-local</span></div>
-          <div class="m-real">qwen/qwen3-coder-next</div>
-          <p class="m-fn">El coder de 80B que no cabe en 36 GB, ultra-barato. Alternativa de escalado cuando quieres más músculo que el 30B local sin pagar GLM.</p>
-          <div class="chips"><span class="chip">$0,12 / $0,80 M</span><span class="chip">262k ctx</span></div>
         </div>
 
         <div class="m">
@@ -425,7 +426,7 @@
         <div class="m">
           <div class="m-top"><span class="m-alias">cloud-vision</span><span class="m-role">Visión pesada</span></div>
           <div class="m-real">minimax/minimax-m3</div>
-          <p class="m-fn">Vídeo o documentos visuales que el 35B local no resuelve. Barato para 1M de contexto multimodal.</p>
+          <p class="m-fn">Vídeo o documentos visuales que el orquestador local no resuelve. Barato para 1M de contexto multimodal.</p>
           <div class="chips"><span class="chip">$0,30 / $1,20 M</span><span class="chip">1M ctx</span></div>
         </div>
       </div>
@@ -433,9 +434,30 @@
     </div>
   </section>
 
+  <!-- ══ ROLES CANÓNICOS ══ -->
+  <section>
+    <div class="sec-h"><span class="n">03</span><h2>Roles fijos · modelos enchufables</h2><span class="rule"></span></div>
+    <div class="panel">
+      <p style="margin:0 0 14px;font-size:14px;color:var(--ink);">Lo que define este stack no son los modelos, es el <b>reparto de roles</b>. Cada rol se sirve por un <b>alias</b>; cambiar el modelo de un rol = editar una línea en <code>litellm.config.yaml</code>, cero cambios en los clientes. <b>Cualquier modelo frontera</b> —local o cloud— puede cumplir un rol. Demostrado el 08/09: el orquestador pasó de Qwen3.6-35B a Nex-N2-mini repuntando un alias.</p>
+      <table>
+        <thead><tr><th>Rol canónico</th><th>Alias</th><th>Modelo de hoy</th><th>Frontera</th></tr></thead>
+        <tbody>
+          <tr><td>Orquestador</td><td>local-general</td><td>Nex-N2-mini (35B-A3B) <span class="res">· antes 35B</span></td><td class="res">local</td></tr>
+          <tr><td>Coder</td><td>local-coder</td><td>Qwen3-Coder-30B <span class="res">· cloud: V4-Pro</span></td><td class="res">local/cloud</td></tr>
+          <tr><td>Workers ×4</td><td>local-worker</td><td>DeepSeek-R1-8B</td><td class="res">local</td></tr>
+          <tr><td>Revisores (careo)</td><td>local-reasoner · -reviewer-ms · -auditor</td><td>gpt-oss-20b · Phi-4 · Gemma-4</td><td class="res">local</td></tr>
+          <tr><td>Red-team / seguridad</td><td>local-uncensored</td><td>Josiefied-30B abliterado</td><td class="res">local</td></tr>
+          <tr><td>Revisión externa</td><td>—</td><td>Codex · Gemini · Claude</td><td class="res">frontera USA</td></tr>
+          <tr><td>RAG</td><td>local-embed</td><td>Qwen3-Embedding-0.6B</td><td class="res">local</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:12.5px;color:var(--soft);margin:12px 2px 0;">El careo tiene <b>3 capas</b> por si el rol de revisor escala: <b>local</b> (privado, gratis) → <b>gratis cloud</b> (<code>auditor-free</code>, 120B) → <b>pago</b> (Codex/Gemini). La frontera de datos manda sobre las tres.</p>
+    </div>
+  </section>
+
   <!-- ══ PERFILES + FRONTERA ══ -->
   <section>
-    <div class="sec-h"><span class="n">03</span><h2>Marchas y reglas</h2><span class="rule"></span></div>
+    <div class="sec-h"><span class="n">04</span><h2>Marchas y reglas</h2><span class="rule"></span></div>
     <div class="grid2">
 
       <div class="panel">
@@ -443,13 +465,14 @@
         <table>
           <thead><tr><th>Perfil</th><th>Residentes</th><th>RAM</th></tr></thead>
           <tbody>
-            <tr><td>agente</td><td>35B@32k + R1-8B@16k + embed <span class="res">· multi-agente real</span></td><td class="res">~27 GB</td></tr>
-            <tr><td>code</td><td>coder@32k + embed <span class="res">· sesiones de código (swap)</span></td><td class="res">~25 GB</td></tr>
-            <tr><td>general</td><td>35B@48k + embed <span class="res">· chat/visión mono</span></td><td class="res">~28 GB</td></tr>
-            <tr><td>careo</td><td>gpt-oss + Phi/Gemma <span class="res">· evicta el 35B</span></td><td class="res">16–20 GB</td></tr>
+            <tr><td>agente</td><td>Nex@32k + R1-8B@16k + embed <span class="res">· multi-agente (el más apretado, 35% libre)</span></td><td class="res">~25 GB</td></tr>
+            <tr><td>code</td><td>coder@32k + R1-8B <span class="res">· sesiones de código (swap)</span></td><td class="res">~22 GB</td></tr>
+            <tr><td>general</td><td>Nex@48k + embed <span class="res">· chat/visión mono</span></td><td class="res">~24 GB</td></tr>
+            <tr><td>careo</td><td>gpt-oss + Phi/Gemma <span class="res">· evicta el orquestador</span></td><td class="res">16–20 GB</td></tr>
+            <tr><td>red-team</td><td>Josie sola <span class="res">· auditoría seguridad (el más holgado, 68% libre)</span></td><td class="res">17 GB</td></tr>
           </tbody>
         </table>
-        <p style="font-size:12.5px;color:var(--soft);margin:12px 2px 0;">Regla intacta: <b>nunca dos grandes a la vez</b> (guardarraíl de LM Studio). En 36 GB, cualquier careo real (2 revisores ≈20 GB) <b>obliga a evictar el orquestador</b> ~1-2 min — coste asumido, no fallo. Swap por potencia: código serio→CODE · contexto gigante→V4-Pro · visión→MiniMax.</p>
+        <p style="font-size:12.5px;color:var(--soft);margin:12px 2px 0;">Regla intacta: <b>nunca dos grandes a la vez</b> (guardarraíl de LM Studio). Cualquier careo evicta el orquestador y lo <b>recalienta</b> al terminar. <b>Medido 09/09:</b> un swap completo (evicción 2s + cargar grande ~10s) es <b>~12s, no minutos</b>. Swap por potencia: código serio→CODE · contexto gigante→V4-Pro · visión→MiniMax.</p>
       </div>
 
       <div class="panel rule-card">
@@ -468,7 +491,7 @@
   </section>
 
   <footer>
-    <span>Stack Agéntico v5.4 · Mac M4 Max 36 GB · foto 2026-09-08</span>
-    <span class="fix">✓ cerebro unificado al 35B · 8B jubilado · careo 2 velocidades</span>
+    <span>Stack Agéntico v5.5 · Mac M4 Max 36 GB · foto 2026-09-09</span>
+    <span class="fix">✓ orquestador → Nex-N2-mini · roles enchufables · careo 3 capas + red-team</span>
   </footer>
 </div>

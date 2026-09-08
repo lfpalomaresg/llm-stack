@@ -12,16 +12,31 @@ model_list:
 
   - model_name: local-general
     litellm_params:
-      # FIX 2026-09-06 (drift confirmado por operador): local-general debe ser el
-      # ORQUESTADOR 35B (así lo dice sistema-agentico.md §1), no el 8B. Una edición
-      # intermedia lo dejó en qwen3-8b y el 35B quedó huérfano (sin alias). Restaurado.
+      # ORQUESTADOR. 2026-09-08 (OK operador): sustituido Qwen3.6-35B-A3B por Nex-N2-mini
+      # (35B-A3B de nex-agi, MISMA arquitectura qwen3_5_moe y footprint ~20GB, pero afinado
+      # para AGENTES). Bench VS ganado por Nex: salida directa sin thinking-dump, JSON estricto,
+      # tool-use. El 35B se conserva en disco (alias local-35b) por si se revierte.
+      model: openai/nex-n2-mini-local
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
+
+  # 35B ANTERIOR orquestador — conservado para revertir/comparar (OK operador 2026-09-08).
+  # Revertir = repuntar local-general a openai/qwen3.6-35b-a3b (o usar este alias directo).
+  - model_name: local-35b
+    litellm_params:
       model: openai/qwen3.6-35b-a3b
       api_base: http://localhost:1234/v1
       api_key: lm-studio
 
-  # local-fast (qwen3-8b) JUBILADO 2026-09-08 (OK operador): redundante con
-  # local-worker (DeepSeek-R1-0528-Qwen3-8B), que razona mejor por el mismo coste
-  # de RAM (~4.6 GB). Un 8B basta; no hacen falta dos. Backup: .bak.20260908-retire8b.
+  # local-fast: rol "rápido" (lookups, /no_think) que usa enrutar.sh como destino y
+  # degradado. 2026-09-08: el MODELO qwen3-8b se jubiló y borró; local-fast apunta ahora
+  # al MISMO R1-8B que local-worker (un solo 8B físico, sin duplicar). No es un modelo extra,
+  # es un segundo punto de entrada al R1-8B para el camino rápido. Backup: .bak.20260908-retire8b.
+  - model_name: local-fast
+    litellm_params:
+      model: openai/deepseek/deepseek-r1-0528-qwen3-8b
+      api_base: http://localhost:1234/v1
+      api_key: lm-studio
 
   - model_name: local-embed
     litellm_params:

@@ -486,3 +486,48 @@ multimodal, MLX 4-bit + MTP disponible) pero **post-entrenado para AGENTES** (SW
 Terminal-Bench 60,7 · tool-use en bucle). Es un upgrade de *fineup*, no de talla → coste RAM idéntico.
 Ya estaba anotado como semilla el 28/08; ahora priorizado a benchar cara a cara vs el baseline. Si no
 mejora en careo real, el 35B sigue siendo el óptimo (resultado válido).
+
+## 16. Nex-N2-mini SUSTITUYE al 35B como orquestador + principio CANÓNICO — 2026-09-09 (OK operador)
+
+**PRINCIPIO CANÓNICO (nuevo, rector del stack):** lo que define este stack NO son los modelos, es el
+**reparto de ROLES** (orquestador, coder, workers, revisores, red-team, RAG). Cada rol se sirve por un
+**alias LiteLLM**; el MODELO que lo cumple es **ENCHUFABLE** — cualquier frontera (local o cloud: Claude,
+GPT, Gemini, DeepSeek, o un local nuevo) entra repuntando su alias, cero cambios en los clientes. La
+arquitectura no depende de ningún modelo concreto. Esto se demostró cambiando el orquestador con una línea.
+
+**Bench VS (Nex-N2-mini vs Qwen3.6-35B), mismos prompts de orquestación:**
+- **Descomposición/delegación:** Nex da lista limpia con agente por paso (5,5s); el 35B **volcó "thinking
+  process"** y se quedó sin presupuesto sin dar la respuesta.
+- **JSON estricto:** Nex JSON válido sin preámbulo (2,2s); el 35B thinking-dump, no produjo el JSON (2/3
+  fallos, incluso con `/no_think` — este build MLX lo ignora).
+- **Razonamiento (RevPAR):** ambos correctos; Nex directo, 35B verboso.
+- **Velocidad ~90 t/s ambos · RAM 20,4 GB ambos** (misma arquitectura qwen3_5_moe, mismo footprint).
+- **Veredicto:** Nex gana como orquestador (salida directa, obediente, formato estricto, agentic-tuned:
+  SWE-Bench 74,4 · Terminal-Bench 60,7). El thinking-dump del 35B era la fricción real del operador.
+
+**Sustitución aplicada (todo lo que apuntaba al 35B → Nex):**
+- `litellm.config.yaml`: `local-general` → `openai/nex-n2-mini-local`. **+alias `local-35b`** (→ el 35B,
+  conservado en disco para revertir/comparar). Revertir = repuntar local-general a qwen3.6-35b-a3b.
+- `stack.sh`: `GENERAL="nex-n2-mini-local"` + textos de perfil. test-ram **10/10**.
+- `careo-local.py`: `GRANDES` incluye `nex-n2-mini-local` (el recalentado post-careo lo repone).
+- `enrutar.sh` (scripts/): `GENERAL_ID` → nex · `FAST_ID` → R1-8B (arreglado: apuntaba al qwen3-8b borrado)
+  · nombres cloud stale corregidos (glm-5.2→5.3, kimi-k3→deepseek-v4-pro en el fallback directo).
+- `opencode.json`: etiqueta del orquestador. hermes/opencode/enrutar **siguen automáticamente** por usar el
+  alias `local-general` (la indirección de alias ES lo que hace el stack model-agnostic).
+- `local-fast` RE-AÑADIDO como alias → **mismo R1-8B** (un solo 8B físico; enrutar.sh lo usa de degradado).
+  → 19 aliases.
+- **Descarga de Nex:** HF rate-limitó vía `lms get` (atasco en 1 shard). Resuelto: bajado el shard con
+  curl directo al CDN (30 MB/s vs 1), y como `lms get` no reconoce el shard curl (Xet), se **registró
+  renombrando la carpeta** (rompe el estado "downloading" de la DB de LM Studio). Carga en 12,4s, responde.
+
+**#5 — sets de modelos por operación y swapping (medido 09/09, todos caben, cero OOM):**
+| Set | Modelos | Carga | RAM libre | Swap |
+|---|---|---|---|---|
+| AGENTE | Nex@32k + R1-8B | 10,7+6,1s | 35% (el más apretado) | +6 GB |
+| CODE | Coder-30B + R1-8B | 5,9+4,7s | 45% | — |
+| CAREO duro | gpt-oss + Phi | 7,0+4,4s | 52% | — |
+| RED-TEAM | Josie sola | 6,5s | **68% (el más holgado)** | 0 |
+| unload --all | — | **2,2s** | — | — |
+- **Corrección medida:** un swap completo (evicción 2s + cargar grande ~10s) = **~12s, NO 1-2 min** como
+  se estimaba. La fluidez real entre operaciones es de segundos. El AGENTE es el techo (TTL-30min lo cubre);
+  Josie el suelo (auditoría de seguridad = el uso que MENOS estresa la RAM → el `tool-code-audit` no petará).
