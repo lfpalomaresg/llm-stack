@@ -6,7 +6,11 @@ model_list:
   # ── LOCAL (LM Studio, localhost:1234) ──────────────────────────
   - model_name: local-coder
     litellm_params:
-      model: openai/qwen3-coder-30b-a3b-instruct-mlx
+      # 2026-09-10 (OK operador): local-coder → Nex. El Coder-30B se retira (su hueco,
+      # código local sensible/acotado, lo cubre Nex — agentic-tuned, no-think). Red de
+      # seguridad: cualquier consumidor que pida local-coder recibe Nex, no un 404.
+      # Código NO sensible grande → cloud (dpsk / cloud-coder-value). Backup .bak.20260910-coder-a-nex
+      model: openai/nex-n2-mini-local
       api_base: http://localhost:1234/v1
       api_key: lm-studio
 
@@ -20,13 +24,8 @@ model_list:
       api_base: http://localhost:1234/v1
       api_key: lm-studio
 
-  # 35B ANTERIOR orquestador — conservado para revertir/comparar (OK operador 2026-09-08).
-  # Revertir = repuntar local-general a openai/qwen3.6-35b-a3b (o usar este alias directo).
-  - model_name: local-35b
-    litellm_params:
-      model: openai/qwen3.6-35b-a3b
-      api_base: http://localhost:1234/v1
-      api_key: lm-studio
+  # local-35b RETIRADO 2026-09-10 (OK operador "borra"): el Qwen3.6-35B se borró del disco.
+  # Nex es el único grande local. Volver al 35B = re-descargar (~19 GB) + re-crear el alias.
 
   # local-fast: rol "rápido" (lookups, /no_think) que usa enrutar.sh como destino y
   # degradado. 2026-09-08: el MODELO qwen3-8b se jubiló y borró; local-fast apunta ahora

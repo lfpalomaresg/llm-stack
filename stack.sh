@@ -170,8 +170,9 @@ case "$1" in
     _perfil "$CODER" code 32768 && echo "Perfil CODE activo (coder 32k + fast 24k)"
     ;;
   code)
-    _require_lms; _lock 60 || exit 4
-    _perfil "$CODER" code 32768 && echo "Perfil CODE activo (coder 32k + fast 24k)"
+    # 2026-09-10 (OK operador): Coder-30B RETIRADO. El código local lo hace Nex (perfil AGENTE).
+    echo "ℹ️  Perfil CODE retirado (Coder-30B fuera): el código local lo hace Nex → cargo AGENTE."
+    exec "$0" agente
     ;;
   general)
     _require_lms; _lock 60 || exit 4

@@ -1,4 +1,4 @@
-<title>Stack Agéntico v5.5</title>
+<title>Stack Agéntico v5.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -133,14 +133,14 @@
 <div class="wrap">
   <header>
     <div class="kicker"><span class="dot"></span> Entorno agéntico local-first &nbsp;·&nbsp; Mac M4 Max · 36 GB</div>
-    <h1>Stack Agéntico v5.5</h1>
-    <p class="lede"><b>Arquitectura canónica</b>: los <b>roles</b> (orquestador, coder, workers, revisores, red-team, RAG) son fijos; el <b>modelo</b> que cumple cada rol es <b>enchufable</b> tras una capa de alias única. Cualquier frontera —local o cloud— entra repuntando su alias. <b>19 alias</b> en tres capas detrás de un solo endpoint; lo sensible se queda en la máquina y solo se escala fuera por señal objetiva.</p>
+    <h1>Stack Agéntico v5.6</h1>
+    <p class="lede"><b>Arquitectura canónica</b>: los <b>roles</b> (orquestador, coder, workers, revisores, red-team, RAG) son fijos; el <b>modelo</b> que cumple cada rol es <b>enchufable</b> tras una capa de alias única. Cualquier frontera —local o cloud— entra repuntando su alias. <b>18 alias</b> en tres capas detrás de un solo endpoint; <b>un solo grande local residente (Nex)</b>; lo sensible se queda en la máquina y el salto a la nube (<code>dpsk</code> → V4-Pro) es siempre decisión consciente.</p>
     <div class="meta">
       <span><b>Gateway</b> LiteLLM · :4000</span>
       <span><b>Local</b> LM Studio · :1234</span>
       <span><b>Gratis</b> agy-bridge · :4010</span>
       <span><b>Cloud</b> OpenRouter</span>
-      <span><b>Foto</b> 2026-09-09</span>
+      <span><b>Foto</b> 2026-09-10</span>
     </div>
   </header>
 
@@ -194,7 +194,7 @@
         <rect x="46" y="116" width="698" height="46" rx="10" fill="var(--raise)" stroke="var(--ink)" stroke-width="1.5"/>
         <text x="66" y="144" font-family="IBM Plex Sans, sans-serif" font-weight="700" font-size="16" fill="var(--ink)">LiteLLM</text>
         <text x="150" y="144" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--soft)">localhost:4000 · un solo endpoint · alias → modelo</text>
-        <text x="724" y="144" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--faint)">19 alias</text>
+        <text x="724" y="144" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="var(--faint)">18 alias</text>
 
         <!-- split arrows to 3 tiers -->
         <g stroke="var(--soft)" stroke-width="1.6" fill="none" color="var(--soft)">
@@ -217,7 +217,7 @@
         <text x="70" y="265" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--local)">:1234 · en el Mac · lo sensible</text>
         <g font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--ink)">
           <text x="70" y="292">▸ local-general · Nex ★</text>
-          <text x="70" y="313">▸ local-coder · 30B MoE (swap)</text>
+          <text x="70" y="313">▸ local-coder → Nex (alias)</text>
           <text x="70" y="334">▸ local-worker · R1-8B ×4</text>
           <text x="70" y="355">▸ local-auditor · Gemma-4</text>
           <text x="70" y="376">▸ local-embed · 0.6B</text>
@@ -276,26 +276,19 @@
 
   <!-- ══ MODELOS ══ -->
   <section>
-    <div class="sec-h"><span class="n">02</span><h2>Los 19 alias · estructura y función (instancia de hoy)</h2><span class="rule"></span></div>
+    <div class="sec-h"><span class="n">02</span><h2>Los 18 alias · estructura y función (instancia de hoy)</h2><span class="rule"></span></div>
     <div class="tiers">
 
       <!-- LOCAL -->
       <div class="tier local">
-        <div class="tier-head"><span class="tag">LOCAL · 10</span><span class="ep">LM Studio · :1234</span></div>
+        <div class="tier-head"><span class="tag">LOCAL · 8</span><span class="ep">LM Studio · :1234</span></div>
         <div class="tier-sub">En la máquina. Aptos para datos sensibles (frontera intacta).</div>
 
         <div class="m">
           <div class="m-top"><span class="m-alias">local-general</span><span class="m-role">Orquestador único</span></div>
           <div class="m-real">Nex-N2-mini (35B-A3B · nex-agi) · visión</div>
-          <p class="m-fn">El orquestador compartido por hermes y opencode: descompone, delega, integra. Afinado para <b>agentes</b> (SWE-Bench 74,4 · Terminal-Bench 60,7) → salida directa sin volcar razonamiento, sigue formato estricto. Multimodal. Sustituyó al Qwen3.6-35B el 08/09 (bench VS ganado); el 35B queda como <code>local-35b</code> para revertir.</p>
+          <p class="m-fn">El orquestador compartido por hermes y opencode: descompone, delega, integra. Afinado para <b>agentes</b> (SWE-Bench 74,4 · Terminal-Bench 60,7) → salida directa sin volcar razonamiento, sigue formato estricto. Multimodal. Sustituyó al Qwen3.6-35B el 08/09 (bench VS ganado). <b>Único grande local</b>: también es el coder local (<code>local-coder</code> es alias a Nex) para código sensible acotado. Tarea grande NO sensible → salto consciente <code>dpsk</code> (V4-Pro).</p>
           <div class="chips"><span class="chip moe">MoE ~3B act.</span><span class="chip">35B-A3B</span><span class="chip">20,4 GB</span><span class="chip hero">agentic</span></div>
-        </div>
-
-        <div class="m">
-          <div class="m-top"><span class="m-alias">local-35b</span><span class="m-role">Orquestador anterior</span></div>
-          <div class="m-real">Qwen3.6-35B-A3B · visión</div>
-          <p class="m-fn">El orquestador anterior, conservado en disco por si se revierte o para comparar. Es *thinking* (razona en voz alta), lo que lo hacía verboso como orquestador. Mismo footprint que Nex (20,4 GB).</p>
-          <div class="chips"><span class="chip moe">MoE ~3B act.</span><span class="chip">35B-A3B</span><span class="chip">20,4 GB</span><span class="chip">revertir</span></div>
         </div>
 
         <div class="m">
@@ -303,13 +296,6 @@
           <div class="m-real">= R1-8B (mismo modelo que local-worker)</div>
           <p class="m-fn">Rol "rápido" (lookups, <code>/no_think</code>) que usa <code>enrutador-ia</code> como destino y degradado. El qwen3-8b se jubiló y borró; local-fast apunta ahora al mismo R1-8B — un solo 8B físico, dos puntos de entrada.</p>
           <div class="chips"><span class="chip">denso · 8B</span><span class="chip">4,6 GB</span><span class="chip">rápido</span></div>
-        </div>
-
-        <div class="m">
-          <div class="m-top"><span class="m-alias">local-coder</span><span class="m-role">Coder · swap JIT</span></div>
-          <div class="m-real">Qwen3-Coder-30B-A3B · MLX 4-bit</div>
-          <p class="m-fn">Código serio en local, <b>por swap</b> (evicta al orquestador). Instruct sin cadena de pensamiento → mucho más rápido que el 35B en código. Para código NO sensible en paralelo, el segundo coder es cloud (V4-Pro), no otro grande local.</p>
-          <div class="chips"><span class="chip moe">MoE ~3B act.</span><span class="chip">30B</span><span class="chip">17,2 GB</span><span class="chip">swap</span></div>
         </div>
 
         <div class="m">
@@ -443,7 +429,7 @@
         <thead><tr><th>Rol canónico</th><th>Alias</th><th>Modelo de hoy</th><th>Frontera</th></tr></thead>
         <tbody>
           <tr><td>Orquestador</td><td>local-general</td><td>Nex-N2-mini (35B-A3B) <span class="res">· antes 35B</span></td><td class="res">local</td></tr>
-          <tr><td>Coder</td><td>local-coder</td><td>Qwen3-Coder-30B <span class="res">· cloud: V4-Pro</span></td><td class="res">local/cloud</td></tr>
+          <tr><td>Coder</td><td>local-coder (→ Nex) · dpsk</td><td>Nex para sensible acotado <span class="res">· V4-Pro (dpsk) para grande NO sensible</span></td><td class="res">local / cloud consciente</td></tr>
           <tr><td>Workers ×4</td><td>local-worker</td><td>DeepSeek-R1-8B</td><td class="res">local</td></tr>
           <tr><td>Revisores (careo)</td><td>local-reasoner · -reviewer-ms · -auditor</td><td>gpt-oss-20b · Phi-4 · Gemma-4</td><td class="res">local</td></tr>
           <tr><td>Red-team / seguridad</td><td>local-uncensored</td><td>Josiefied-30B abliterado</td><td class="res">local</td></tr>
@@ -466,7 +452,7 @@
           <thead><tr><th>Perfil</th><th>Residentes</th><th>RAM</th></tr></thead>
           <tbody>
             <tr><td>agente</td><td>Nex@32k + R1-8B@16k + embed <span class="res">· multi-agente (el más apretado, 35% libre)</span></td><td class="res">~25 GB</td></tr>
-            <tr><td>code</td><td>coder@32k + R1-8B <span class="res">· sesiones de código (swap)</span></td><td class="res">~22 GB</td></tr>
+            <tr><td>code</td><td><span class="res">RETIRADO 10/09 → redirige a agente (Coder-30B fuera)</span></td><td class="res">—</td></tr>
             <tr><td>general</td><td>Nex@48k + embed <span class="res">· chat/visión mono</span></td><td class="res">~24 GB</td></tr>
             <tr><td>careo</td><td>gpt-oss + Phi/Gemma <span class="res">· evicta el orquestador</span></td><td class="res">16–20 GB</td></tr>
             <tr><td>red-team</td><td>Josie sola <span class="res">· auditoría seguridad (el más holgado, 68% libre)</span></td><td class="res">17 GB</td></tr>
@@ -491,7 +477,7 @@
   </section>
 
   <footer>
-    <span>Stack Agéntico v5.5 · Mac M4 Max 36 GB · foto 2026-09-09</span>
-    <span class="fix">✓ orquestador → Nex-N2-mini · roles enchufables · careo 3 capas + red-team</span>
+    <span>Stack Agéntico v5.6 · Mac M4 Max 36 GB · foto 2026-09-10</span>
+    <span class="fix">✓ un solo grande local (Nex) · salto consciente dpsk → V4-Pro · Claude CLI orquesta · careo 0 €</span>
   </footer>
 </div>

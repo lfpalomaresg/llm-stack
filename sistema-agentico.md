@@ -531,3 +531,37 @@ arquitectura no depende de ningún modelo concreto. Esto se demostró cambiando 
 - **Corrección medida:** un swap completo (evicción 2s + cargar grande ~10s) = **~12s, NO 1-2 min** como
   se estimaba. La fluidez real entre operaciones es de segundos. El AGENTE es el techo (TTL-30min lo cubre);
   Josie el suelo (auditoría de seguridad = el uso que MENOS estresa la RAM → el `tool-code-audit` no petará).
+
+## 17. v5.6 — El pivote: dos planos, un solo grande, salto consciente — 2026-09-10 (OK operador)
+
+**Incidente que lo desencadena:** opencode con Nex de primario corrió **17,5 h en una tarea, ~3.000
+pasos, `agent=compaction` cada minuto** — espiral de compactación. Cero resultado. **No era Nex** (el
+35B haría lo mismo o peor): la tarea desbordó los 32k del modelo local y opencode compactó sin fin.
+**Lección de fondo:** un modelo local de 20 GB en 36 GB NO sostiene bucles agénticos sin tope.
+Local = tareas ACOTADAS. Lo grande → nube, por decisión.
+
+**Dos hallazgos previos que sí eran Nex, ya resueltos:** (a) Nex razona en voz alta por defecto y
+opencode no inyecta `/no_think` → fix CENTRAL en el `chat_template.jinja` del modelo (default
+`enable_thinking` → false): prompt 14k de 27s→2,4s caliente, directo (`NEX-NOTHINK-FIX.md`).
+(b) Los wrappers `.zshrc` disparaban "¿desalojar el otro?" con `pgrep hermes` (gateway 24/7 → siempre
+true): ahora solo preguntan si hay OTRO grande distinto de Nex cargado de verdad.
+
+**Arquitectura resultante (dos planos):**
+- **ORQUESTACIÓN** (nube, 0 € al margen): **Claude Code CLI = orquestador formal** (por suscripción,
+  no API), Codex, y opencode como UI de código. Conducen; NO ingieren dato sensible.
+- **DATOS** (local, frontera): **Nex, único grande residente** (AGENTE: Nex@32k + R1 workers + embed
+  ≈ 25 GB fijo); revisores (gpt-oss/Phi/Gemma) y Josie JIT en serie. Ya no hay swaps grande↔grande.
+- **Salto consciente a la nube:** en opencode, agente primario **`dpsk`** (Tab, conserva historial) o
+  alias de terminal `dpsk` (arranca directo en V4-Pro sin cargar Nex). **Nunca automático** — un salto
+  automático filtraría datos sensibles sin que nadie lo decida. Es decisión del operador, por tarea.
+- **Ley de frontera para la nube:** Claude/Codex/opencode-cloud orquestan; lo sensible va a Nex vía
+  `SENSIBLE=1`, nunca al contexto de la nube.
+- **Careo 0 €:** local → gratis nube (`auditor-free`) → Codex (suscripción). Solo Gemini cuesta.
+
+**Retiros:** Qwen3.6-35B (orquestador anterior) y Coder-30B (su hueco, código sensible acotado, lo cubre
+Nex agentic-tuned). `local-coder` → alias a Nex (red de seguridad); `stack.sh code` → redirige a agente;
+`CODER_ID`→Nex en enrutar; GRANDES y helper `.zshrc` limpios. test-ram **10/10** con 3 tests
+reescritos a la realidad de un solo grande. Libera ~35 GB.
+
+**Decisión sobre visión:** Nex (VLM) para visión ligera + `cloud-vision` (MiniMax) para pesada. La visión
+de Nex NO está benchada — no se afirma que sea la mejor; mini-bench pendiente si la visión se vuelve diaria.

@@ -1,4 +1,4 @@
-<title>Consola LLM Stack v5.5</title>
+<title>Consola LLM Stack v5.6</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   @font-face {
@@ -478,14 +478,14 @@
       <span class="brand-sep">/</span>
       <span class="brand-tag">MacBook Pro M4 Max · 36&nbsp;GB</span>
     </div>
-    <div class="topbar-meta">actualizado 9&nbsp;sep&nbsp;2026</div>
+    <div class="topbar-meta">actualizado 10&nbsp;sep&nbsp;2026</div>
   </div>
 </div>
 
 <div class="wrap">
 
   <header class="hero">
-    <p class="eyebrow">Infraestructura personal de IA · v5.5 · arquitectura canónica</p>
+    <p class="eyebrow">Infraestructura personal de IA · v5.6 · dos planos · un solo grande local</p>
     <h1>Consola del LLM&nbsp;Stack</h1>
     <p class="hero-lede">
       Una <strong>arquitectura agéntica canónica</strong>: los <strong>roles</strong>
@@ -498,8 +498,8 @@
 
     <div class="stat-row">
       <div class="stat">
-        <div class="stat-num">10</div>
-        <div class="stat-label">alias locales, 0&nbsp;€ por consulta</div>
+        <div class="stat-num">8</div>
+        <div class="stat-label">modelos locales, un solo grande (Nex)</div>
       </div>
       <div class="stat">
         <div class="stat-num">7</div>
@@ -637,9 +637,7 @@
           <tr><th>Alias</th><th>Modelo real</th><th>Rol</th><th>RAM</th><th>Techo ctx</th></tr>
         </thead>
         <tbody>
-          <tr><td class="mono">local-coder</td><td>Qwen3-Coder-30B-A3B MLX 4bit</td><td>Coder titular</td><td class="num">17,2&nbsp;GB</td><td class="num">32k</td></tr>
           <tr><td class="mono">local-general</td><td>Nex-N2-mini (35B-A3B, nex-agi) MLX 4bit</td><td>Orquestador (agentic) · chat · visión</td><td class="num">20,4&nbsp;GB</td><td class="num">32k / 48k</td></tr>
-          <tr><td class="mono">local-35b</td><td>Qwen3.6-35B-A3B MLX 4bit</td><td>Orquestador anterior — conservado para revertir</td><td class="num">20,4&nbsp;GB</td><td class="num">32k / 48k</td></tr>
           <tr><td class="mono">local-fast</td><td>Qwen3-8B MLX 4bit</td><td>Utility — resúmenes, commits</td><td class="num">4,6&nbsp;GB</td><td class="num">24k</td></tr>
           <tr><td class="mono">local-worker</td><td>DeepSeek-R1-0528-Qwen3-8B</td><td>Workers ×1–4, razonamiento</td><td class="num">4,6&nbsp;GB</td><td class="num">16k</td></tr>
           <tr><td class="mono">local-auditor</td><td>Gemma-4-E4B-it OptiQ</td><td>Auditor sensible — carga JIT</td><td class="num">~5&nbsp;GB</td><td class="num">8k</td></tr>
@@ -776,7 +774,7 @@
         <tbody>
           <tr><td>Orquestador</td><td class="mono">local-general</td><td class="num">20,4&nbsp;GB</td><td>Siempre que hay orquestación local</td></tr>
           <tr><td>Workers ×N</td><td class="mono">local-worker</td><td class="num">4,6&nbsp;GB</td><td>Tareas acotadas, hasta 4 en paralelo</td></tr>
-          <tr><td>Coder titular</td><td class="mono">local-coder</td><td class="num">17,2&nbsp;GB</td><td>Sesiones de código, perfil CODE</td></tr>
+          <tr><td>Coder</td><td class="mono">local-coder → Nex · dpsk</td><td class="num">—</td><td>Código sensible acotado en Nex; tarea grande NO sensible → salto consciente a V4-Pro (dpsk)</td></tr>
           <tr><td>Auditor titular</td><td class="mono">auditor-free</td><td class="num">0&nbsp;GB</td><td>Gratis primero (agy) · GLM de red si falla — 3/3 en la validación</td></tr>
           <tr><td>Auditor sensible</td><td class="mono">local-auditor</td><td class="num">~5&nbsp;GB</td><td>Dato que no sale del Mac — carga JIT</td></tr>
           <tr><td>RAG</td><td class="mono">local-embed</td><td class="num">0,6&nbsp;GB</td><td>Siempre residente</td></tr>
