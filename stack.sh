@@ -64,21 +64,29 @@ _lock() {
 }
 _unlock() { llm_lock_soltar "$LOCKDIR"; }
 
-_loaded() { lms ps 2>/dev/null | awk 'NR>1 && NF>3 {print $1}' | grep -qx "$1"; }
+# 2026-09-14: `lms ps` (texto) ahora emite códigos ANSI incluso sin TTY ("1h\e[22m")
+# → `_ttl_total_cargado` reventaba con "bad math expression" y el wrapper de
+# opencode fallaba con "No se pudo preparar el perfil" (dejando Nex descargado
+# y un 8B duplicado). Se lee `lms ps --json`, que no lleva colores.
+_ps_campo() {  # $1 = identifier, $2 = campo JSON (contextLength | ttlMs); vacío si no está
+  lms ps --json 2>/dev/null | python3 -c '
+import sys, json
+ident, campo = sys.argv[1], sys.argv[2]
+for m in json.load(sys.stdin):
+    if m.get("identifier") == ident:
+        v = m.get(campo); print("" if v is None else v); break
+' "$1" "$2" 2>/dev/null
+}
+_loaded() { [ -n "$(_ps_campo "$1" contextLength)" ]; }
 
 # Lee de `lms ps` el contexto y el TTL TOTAL (no el restante) del modelo $1,
 # ya cargado. Columnas de `lms ps`: IDENTIFIER MODEL STATUS SIZE_NUM SIZE_UNIT
 # CONTEXT PARALLEL DEVICE TTL_restante / TTL_total → $6 y $NF respectivamente.
-_ctx_cargado() { lms ps 2>/dev/null | awk -v m="$1" 'NR>1 && $1==m {print $6}'; }
+_ctx_cargado() { _ps_campo "$1" contextLength; }
 _ttl_total_cargado() {
-  local raw; raw=$(lms ps 2>/dev/null | awk -v m="$1" 'NR>1 && $1==m {print $NF}')
-  [ -z "$raw" ] && return 1
-  case "$raw" in
-    *h) echo $(( ${raw%h} * 3600 )) ;;
-    *m) echo $(( ${raw%m} * 60 )) ;;
-    *s) echo "${raw%s}" ;;
-    *)  echo "$raw" ;;
-  esac
+  local ms; ms=$(_ps_campo "$1" ttlMs)
+  [ -z "$ms" ] && return 1
+  echo $(( ms / 1000 ))
 }
 
 _otro_grande_en_ram() {  # $1 = el grande que quiero; 0 si HAY otro distinto cargado
