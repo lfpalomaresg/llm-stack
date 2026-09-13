@@ -182,8 +182,11 @@ case "$1" in
     _require_lms; _lock 60 || exit 4
     # TTL 30min (1800s) para ambos — perfil de ráfaga, no de uso continuo
     # (incidente 2026-09-03: dejado IDLE con TTL de 2h llenó el swap).
-    _perfil "$GENERAL" agente 32768 "$WORKER" 16384 1800 1800 \
-      && echo "Perfil AGENTE activo (Nex-N2-mini orquestador 32k + R1-8B workers 16k, TTL 30min · auditor: GLM cloud / gemma JIT)"
+    # 2026-09-14: workers a 24k (antes 16k). opencode.json declara limit.context 16384
+    # para local-worker: con 16k reales no había margen y, si el TTL vencía, el JIT
+    # recargaba el 8B a 8k → bucle de compactación de 8 h (1.089 pasos, 545 errores).
+    _perfil "$GENERAL" agente 32768 "$WORKER" 24576 1800 1800 \
+      && echo "Perfil AGENTE activo (Nex-N2-mini orquestador 32k + R1-8B workers 24k, TTL 30min · auditor: GLM cloud / gemma JIT)"
     ;;
   ligero)
     _require_lms; _lock 60 || exit 4
