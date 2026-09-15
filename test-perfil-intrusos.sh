@@ -88,5 +88,20 @@ _estado "[]"; _run > /dev/null; : > "$TMP/lms.log"; rc=$(_run)
 _check "exit 0" "$rc" "0"
 _check "0 cargas en la 2ª pasada" "$(grep -c '^load ' "$TMP/lms.log")" "0"
 
+print "6) Perfil GENERAL con el explorador residente: libera su RAM antes de cargar Nex"
+# 2026-09-16, medido: con el explorador (5,6 GB) residente, LM Studio RECHAZA Nex (20,4 GB)
+# por guardarraíl ("insufficient system resources"). El relevo automático solo ocurre entre
+# modelos JIT; el explorador lo carga stack.sh, así que hay que desalojarlo a propósito.
+_estado "[]"; _run FORCE=1 > /dev/null          # deja el explorador residente
+_run_general() {
+  env PATH="$TMP/bin:$PATH" FAKE_LMS_STATE="$TMP/state.json" FAKE_LMS_LOG="$TMP/lms.log" \
+      LLM_STACK_LOCKDIR="$TMP/lock" "$@" zsh ~/llm-stack/stack.sh general > "$TMP/out" 2>&1
+  print $?
+}
+: > "$TMP/lms.log"; rc=$(_run_general)
+_check "exit 0" "$rc" "0"
+_check "Nex cargado y explorador fuera" "$(_ids)" "$GENERAL"
+_check "se descargó el explorador explícitamente" "$(grep -c "^unload $FAST" "$TMP/lms.log")" "1"
+
 (( fallos == 0 )) && print "\nVERDE: 0 fallos" || print "\nROJO: $fallos fallo(s)"
 exit $fallos

@@ -215,9 +215,15 @@ case "$1" in
     ;;
   general)
     _require_lms; _lock 60 || exit 4
-    # 2026-09-15 (opción b): Nex a 32k (antes 48k) para convivir con el explorador residente.
-    _perfil "$GENERAL" general 32768 "$FAST" 32768 1800 0 \
-      && echo "Perfil GENERAL activo (Nex 32k TTL 30min + explorador residente)"
+    # 2026-09-16, MEDIDO: el explorador (5,6 GB) y Nex (20,4 GB) NO caben juntos — LM Studio
+    # rechaza Nex por guardarraíl ("insufficient system resources", modo high, umbral 4 GiB)
+    # incluso con el 65 % de la RAM libre. El relevo automático de LM Studio solo ocurre entre
+    # modelos JIT y el explorador lo carga stack.sh, así que hay que desalojarlo a propósito.
+    # Al terminar con Nex: `stack.sh agente` devuelve el explorador (lo usan @explorador y el bot).
+    _desalojar_intrusos general || exit 5
+    lms unload "$FAST" 2>/dev/null
+    _cargar "$GENERAL" 32768 1800 \
+      && echo "Perfil GENERAL activo (Nex 32k TTL 30min · explorador descargado: 'stack.sh agente' lo recupera)"
     ;;
   agente)
     _require_lms; _lock 60 || exit 4

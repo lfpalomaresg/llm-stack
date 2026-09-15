@@ -594,3 +594,17 @@ bot de Telegram → alias `local-fast` vía LiteLLM (`.env`); agentes opencode (
 
 **Lección:** un cliente que llama a LM Studio con un modelo fijo (el bot) se salta el principio
 canónico de aliases y rompe el reparto de RAM. Todo cliente local → alias LiteLLM, nunca modelo.
+
+**Addendum 2026-09-16 — medido en caliente, no estimado.** (1) **El relevo JIT funciona**: al pedir
+`local-general` por LiteLLM, LM Studio desalojó solo el R1-8B que había entrado JIT
+(`unloadPreviousJITModelOnLoad`). (2) **Nex NO cabe con el explorador residente**: con solo el 9B
+cargado (5,6 GB) y el **65 % de la RAM libre**, el guardarraíl (modo `high`, umbral 4 GiB) rechazó
+Nex (20,4 GB) — «Model loading was stopped due to insufficient system resources». El relevo
+automático solo ocurre entre modelos JIT y el explorador lo carga `stack.sh`, así que nadie lo
+desalojaba. **Fix:** `stack.sh general` descarga el explorador antes de cargar Nex y lo dice en su
+mensaje (`stack.sh agente` lo recupera); test 6 de `test-perfil-intrusos.sh`, rojo visto primero.
+Documentado en `SISTEMA.md` §1.3/§2.3/§5.2/§8.3, `AGENTS.md` y `agent/nexn2.md` para que
+DeepSeek no lo lea como avería. (3) **Contexto por modelo de los JIT** fijado en
+`~/.lmstudio/.internal/user-concrete-model-default-config/` (Nex 32k, R1 24k, 9B 32k): antes todos
+caían al default global de LM Studio (24k). Ese directorio vive fuera de git — re-crear si se
+reinstala LM Studio.
