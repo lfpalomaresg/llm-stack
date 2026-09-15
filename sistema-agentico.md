@@ -565,3 +565,32 @@ reescritos a la realidad de un solo grande. Libera ~35 GB.
 
 **Decisión sobre visión:** Nex (VLM) para visión ligera + `cloud-vision` (MiniMax) para pesada. La visión
 de Nex NO está benchada — no se afirma que sea la mejor; mini-bench pendiente si la visión se vuelve diaria.
+
+## 18. Opción b — explorador residente, R1-8B y Nex bajo demanda — 2026-09-15/16 (OK operador)
+
+**Disparo:** `opencode` no abría desde el terminal ("No se pudo preparar el perfil"). Causa medida en
+el log de LM Studio (15/09 23:06:09, guardarraíl "insufficient system resources"): el wrapper `.zshrc`
+cargaba Nex (20 GB) en cada arranque aunque el primario ya era DeepSeek-V4-Pro, y con el
+`qwen/qwen3.8-27b` del bot de Telegram en RAM (16 GB, añadido ese día desde otra sesión) no cabía.
+Ni la guarda del `.zshrc` ni `_perfil` conocían ese modelo → ni preguntaban ni lo desalojaban.
+
+**Decisiones del operador:** (1) Nex solo como subagente `@nexn2`: en disco, JIT. (2) Borrar el 27B
+(movido a la Papelera). (3) `@explorador` vuelve a tener un modelo SIN razonamiento: desde el 08/09
+`local-fast` apuntaba al R1-8B del worker (razona). Elegido **Qwen3.5-9B MLX 4-bit**: familia `qwen3_5`
+como Nex (soporte LM Studio probado), mismo formato de tool-call `<function=…>`, 32k, ~6 GB, plantilla
+no-think (`QWEN35-9B-NOTHINK.md`, parcheada en `chat_template.jinja` y en `tokenizer_config.json`).
+(4) **Opción b de RAM:** residente solo el explorador; R1-8B y Nex JIT (LM Studio releva un JIT por
+otro → nunca coinciden los tres y Nex siempre cabe). Descartadas: a) 9B + R1 fijos (Nex no cabe sin
+orquestar descargas); c) 9B también como worker con thinking (sin verificar que LiteLLM pase
+`enable_thinking`).
+
+**Cambios:** `stack.sh` (`_desalojar_intrusos`: intruso = LLM fuera de FAST/WORKER/GENERAL, con FORCE
+se descarga y sin FORCE exit 5 nombrándolo; `_cargar` con ttl=0 = residente; `agente`/`ligero`/
+`start`/`daemon` sin Nex; `general` Nex a 32k) + `test-perfil-intrusos.sh` (rojo 5 fallos → verde);
+`litellm.config.yaml` local-fast → `qwen3.5-9b-mlx`; `enrutar.sh` FAST_ID + worker 24k/TTL 30 min;
+`.zshrc` `_llm_asegura_explorador` (opencode/hermes abren siempre, avisan si el explorador no está);
+bot de Telegram → alias `local-fast` vía LiteLLM (`.env`); agentes opencode (`nexn2` ya no invoca a
+`@worker`: le desalojaría), `AGENTS.md` v6.1 y `SISTEMA.md` v1.2.
+
+**Lección:** un cliente que llama a LM Studio con un modelo fijo (el bot) se salta el principio
+canónico de aliases y rompe el reparto de RAM. Todo cliente local → alias LiteLLM, nunca modelo.

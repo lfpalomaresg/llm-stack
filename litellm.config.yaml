@@ -27,13 +27,13 @@ model_list:
   # local-35b RETIRADO 2026-09-10 (OK operador "borra"): el Qwen3.6-35B se borró del disco.
   # Nex es el único grande local. Volver al 35B = re-descargar (~19 GB) + re-crear el alias.
 
-  # local-fast: rol "rápido" (lookups, /no_think) que usa enrutar.sh como destino y
-  # degradado. 2026-09-08: el MODELO qwen3-8b se jubiló y borró; local-fast apunta ahora
-  # al MISMO R1-8B que local-worker (un solo 8B físico, sin duplicar). No es un modelo extra,
-  # es un segundo punto de entrada al R1-8B para el camino rápido. Backup: .bak.20260908-retire8b.
+  # local-fast: EXPLORADOR residente (@explorador, lookups/clasificar, destino y degradado de
+  # enrutar.sh, bot de Telegram). 2026-09-15 (opción b, OK operador): Qwen3.5-9B no-think
+  # (template parcheado, ver ~/llm-stack/QWEN35-9B-NOTHINK.md). Del 08/09 al 15/09 apuntó al
+  # R1-8B del worker, que razona. Backup: .bak.20260915-opcionb.
   - model_name: local-fast
     litellm_params:
-      model: openai/deepseek/deepseek-r1-0528-qwen3-8b
+      model: openai/qwen3.5-9b-mlx
       api_base: http://localhost:1234/v1
       api_key: lm-studio
 
