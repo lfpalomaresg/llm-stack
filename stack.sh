@@ -80,6 +80,9 @@ for m in json.load(sys.stdin):
 ' "$1" "$2" 2>/dev/null
 }
 _loaded() { [ -n "$(_ps_campo "$1" contextLength)" ]; }
+# "idle" | "processing"; vacío si no está cargado. Sirve para no desalojar a un modelo
+# que está respondiendo a otra sesión (2026-09-16).
+_estado_cargado() { _ps_campo "$1" status; }
 
 # Lee de `lms ps` el contexto y el TTL TOTAL (no el restante) del modelo $1,
 # ya cargado. Columnas de `lms ps`: IDENTIFIER MODEL STATUS SIZE_NUM SIZE_UNIT
@@ -236,6 +239,11 @@ case "$1" in
     # config por modelo (lección 14/09: R1 recargado por JIT a 8k → bucle de compactación de 8 h).
     # Test: zsh ~/llm-stack/test-perfil-intrusos.sh
     _desalojar_intrusos agente || exit 5
+    # 2026-09-16: volver a AGENTE libera Nex si está OCIOSO. Si no, quedan ~26 GB ocupados:
+    # el guardarraíl SÍ deja cargar el explorador encima de Nex, pero no al revés, así que
+    # la siguiente sesión que pida @nexn2 se lo encuentra bloqueado. Si Nex está respondiendo
+    # (status processing) no se toca: puede estar sirviendo a @nexn2 en otra sesión.
+    [ "$(_estado_cargado "$GENERAL")" = "idle" ] && lms unload "$GENERAL" 2>/dev/null
     _cargar "$FAST" 32768 0 \
       && echo "Perfil AGENTE activo (explorador residente 32k · @worker R1-8B y @nexn2 Nex bajo demanda)"
     ;;

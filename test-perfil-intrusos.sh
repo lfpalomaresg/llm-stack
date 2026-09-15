@@ -103,5 +103,17 @@ _check "exit 0" "$rc" "0"
 _check "Nex cargado y explorador fuera" "$(_ids)" "$GENERAL"
 _check "se descargó el explorador explícitamente" "$(grep -c "^unload $FAST" "$TMP/lms.log")" "1"
 
+print "7) Volver a AGENTE con Nex OCIOSO: lo descarga (si no, quedan 26 GB ocupados)"
+NEX_IDLE='{"type":"llm","identifier":"'$GENERAL'","modelKey":"'$GENERAL'","sizeBytes":21930000000,"contextLength":32768,"ttlMs":1800000,"status":"idle"}'
+NEX_BUSY='{"type":"llm","identifier":"'$GENERAL'","modelKey":"'$GENERAL'","sizeBytes":21930000000,"contextLength":32768,"ttlMs":1800000,"status":"processing"}'
+_estado "[$NEX_IDLE]"; rc=$(_run)
+_check "exit 0" "$rc" "0"
+_check "Nex fuera, explorador dentro" "$(_ids)" "$FAST"
+
+print "8) Volver a AGENTE con Nex OCUPADO: no se toca (puede estar sirviendo a @nexn2)"
+_estado "[$NEX_BUSY]"; rc=$(_run)
+_check "exit 0" "$rc" "0"
+_check "Nex intacto + explorador" "$(_ids)" "$(_esperado "$FAST" "$GENERAL")"
+
 (( fallos == 0 )) && print "\nVERDE: 0 fallos" || print "\nROJO: $fallos fallo(s)"
 exit $fallos
