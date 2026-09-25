@@ -29,9 +29,9 @@ LOG=~/llm-stack/litellm.log
 PIDFILE=~/llm-stack/litellm.pid
 LOCKDIR="${LLM_STACK_LOCKDIR:-/tmp/llm-stack.lock}"   # override solo para tests
 
-CODER="qwen3-coder-30b-a3b-instruct-mlx"
-# ORQUESTADOR. 2026-09-08: Nex-N2-mini (35B-A3B nex-agi, afinado agentic) sustituye al
-# Qwen3.6-35B. El 35B sigue en disco: revertir = GENERAL="qwen3.6-35b-a3b".
+# ORQUESTADOR local (único grande). 2026-09-08: Nex-N2-mini (35B-A3B nex-agi, afinado
+# agentic) sustituyó al Qwen3.6-35B. 2026-09-10: 35B y Coder-30B RETIRADOS y borrados del
+# disco (OK operador); local-coder es un alias a Nex. 2026-09-25: eliminada la variable CODER.
 GENERAL="nex-n2-mini-local"
 WORKER="deepseek/deepseek-r1-0528-qwen3-8b"   # workers ×N con razonamiento R1 (v5.4)
 # EXPLORADOR residente (@explorador · local-fast · bot de Telegram). 2026-09-15 (opción b, OK
@@ -127,7 +127,8 @@ _desalojar_intrusos() {  # $1 = nombre del perfil (para el mensaje)
 
 _otro_grande_en_ram() {  # $1 = el grande que quiero; 0 si HAY otro distinto cargado
   local otro
-  for otro in "$CODER" "$GENERAL"; do
+  # 2026-09-25: solo queda UN grande local (GENERAL); CODER retirado el 10/09.
+  for otro in "$GENERAL"; do
     [ "$otro" != "$1" ] && _loaded "$otro" && return 0
   done
   return 1
@@ -167,10 +168,9 @@ _cargar() {  # $1 = modelo, $2 = contexto, $3 = ttl en segundos (opcional, def. 
 _perfil() {  # $1 = grande a cargar (o "" para ligero)
   local grande="$1" ctx_g="${3:-49152}" peque="${4:-$FAST}" ctx_p="${5:-24576}" ttl_g="${6:-7200}" ttl_p="${7:-7200}"
   _desalojar_intrusos "$2" || return 5
+  # 2026-09-25: un solo grande local → perfil ligero ("") descarga GENERAL; el resto no cruza nada.
   case "$grande" in
-    "$CODER")   lms unload "$GENERAL" 2>/dev/null ;;
-    "$GENERAL") lms unload "$CODER"   2>/dev/null ;;
-    "")         lms unload "$CODER" 2>/dev/null; lms unload "$GENERAL" 2>/dev/null ;;
+    "")         lms unload "$GENERAL" 2>/dev/null ;;
   esac
   # 2026-09-08: ya solo hay UN 8B (FAST==WORKER=R1-8B), no hay riesgo de 8B+8B →
   # el cruce de descarga anterior sobra. _cargar ya no recarga si ya está con sus params.
@@ -212,9 +212,11 @@ case "$1" in
     _desalojar_intrusos start && _cargar "$FAST" 32768 0 && echo "Stack arrancado: explorador residente (perfil AGENTE)"
     ;;
   code)
-    # 2026-09-10 (OK operador): Coder-30B RETIRADO. El código local lo hace Nex (perfil AGENTE).
-    echo "ℹ️  Perfil CODE retirado (Coder-30B fuera): el código local lo hace Nex → cargo AGENTE."
-    exec "$0" agente
+    # 2026-09-10 (OK operador): Coder-30B RETIRADO. El código local lo hace Nex.
+    # 2026-09-25: en la opción b AGENTE ya no carga Nex (solo el explorador), y el JIT de Nex
+    # no cabe con el explorador residente → CODE redirige a GENERAL, que sí lo desaloja.
+    echo "ℹ️  Perfil CODE retirado (Coder-30B fuera): el código local lo hace Nex → cargo GENERAL."
+    exec "$0" general
     ;;
   general)
     _require_lms; _lock 60 || exit 4
@@ -277,7 +279,7 @@ case "$1" in
     ;;
   stop)
     _require_lms; _lock 60 || exit 4
-    lms unload "$CODER" 2>/dev/null; lms unload "$GENERAL" 2>/dev/null; lms unload "$FAST" 2>/dev/null; lms unload "$WORKER" 2>/dev/null
+    lms unload "$GENERAL" 2>/dev/null; lms unload "$FAST" 2>/dev/null; lms unload "$WORKER" 2>/dev/null
     lms server stop >/dev/null 2>&1
     _para_litellm
     echo "Stack parado"

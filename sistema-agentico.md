@@ -608,3 +608,18 @@ DeepSeek no lo lea como avería. (3) **Contexto por modelo de los JIT** fijado e
 `~/.lmstudio/.internal/user-concrete-model-default-config/` (Nex 32k, R1 24k, 9B 32k): antes todos
 caían al default global de LM Studio (24k). Ese directorio vive fuera de git — re-crear si se
 reinstala LM Studio.
+
+**Addendum 2026-09-25 — limpieza de referencias muertas y deriva de la opción b (OK operador).**
+(1) `stack.sh`: eliminada la variable `CODER` (Coder-30B borrado el 10/09) y sus cuatro usos;
+`careo-local.py`: `GRANDES` solo con Nex (35B borrado). (2) **Bug real de la opción b:**
+`stack.sh code` redirigía a AGENTE, que desde el 15/09 ya no carga Nex, y `enrutar local-coder`
+devolvía un Nex que el JIT no podía cargar con el explorador residente (guardarraíl). Ahora
+`code` → GENERAL y `enrutar local-coder|local-general` llaman a `stack.sh general` directo.
+(3) `enrutar.sh` y `careo-local.py` leían `lms ps` en texto por columnas — el mismo parseo
+que rompió `stack.sh` el 14/09 por los códigos ANSI — y pasan a `lms ps --json`.
+(4) `careo-local.py`: tras `unload --all`, si no había grande repone el explorador residente
+con `stack.sh agente` (antes lo dejaba muerto para @explorador y el bot). (5) `test-ram.sh`
+(enrutador) llevaba 10 días con 4 FAIL de deriva: mock de `lms` sin `--json`, `FAST` copiado a
+mano (R1-8B) y tests que esperaban AGENTE con Nex. Ahora el mock habla JSON con ctx/ttl/status,
+los ids se leen del propio `stack.sh` y los casos 1-3 codifican la opción b. **11/11** y
+`test-perfil-intrusos.sh` **8/8**. Backups `.bak.20260925-*` junto a cada fichero.
