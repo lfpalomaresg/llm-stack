@@ -623,3 +623,24 @@ con `stack.sh agente` (antes lo dejaba muerto para @explorador y el bot). (5) `t
 mano (R1-8B) y tests que esperaban AGENTE con Nex. Ahora el mock habla JSON con ctx/ttl/status,
 los ids se leen del propio `stack.sh` y los casos 1-3 codifican la opción b. **11/11** y
 `test-perfil-intrusos.sh` **8/8**. Backups `.bak.20260925-*` junto a cada fichero.
+
+## 19. Evaluación Qwen-Image-2.1 (7B + encoder Qwen3-VL-8B) — 2026-09-25 · NO ENTRA (licencia)
+
+**Qué es:** sucesor del Qwen-Image 20B (20/09/2026). DiT de **7B / 32 capas de flujo único** que unifica
+generación y edición; **RGBA nativo**, 2048² nativo, hasta 10 imágenes de referencia, edición por máscara.
+**Encoder obligatorio: Qwen3-VL-8B** (el DiT está entrenado contra sus embeddings; no se cambia). Pesa más
+que el generador: bf16 17,5 GB (DiT 14,2 · VAE 0,7 → 33 GB, no cabe en 36 GB); int8 9,4 GB; w4a8 6,3 GB.
+DiT en GGUF (unsloth) Q8 7,6 GB · Q4_K_M 4,2 GB. Reescritores PE-T2I/PE-I2I (Qwen3.5-9B, 9,5 GB int8) opcionales.
+
+**En un Mac de 36 GB (bench ajeno, M5 Max 36 GB, ComfyUI ≥0.36 + ComfyUI-GGUF sobre MPS):** Q8+int8 → pico
+14 GB a 1024px, **156 s/imagen a 40 pasos**, ~18 min a 2048²; Q4+w4a8 → 11 GB, 218 s. Calidad Q8 44/50 vs Q4
+40/50 (logos y contraste de texto). Edición con 2 referencias: hasta 31 GB. **Sin ruta oficial Apple Silicon**
+(ni MLX ni Metal en la ficha; mflux/CoreML son comunidad).
+
+**Veredicto:** **no entra**. (1) **Licencia Qwen Research, solo investigación/evaluación**: uso comercial
+(Blindbeds, Mía, clientes) requiere acuerdo con Alibaba → descalifica antes de medir; los Qwen-Image
+2511/2512 siguen en Apache 2.0. (2) 2,5-4 min/imagen frente a segundos en FAL.ai (ya conectado): la ganancia
+sería solo privacidad + 0 €. Si entrara alguna vez: JIT en serie como Josie, nunca junto a Nex ni al explorador.
+**Disparador para reabrir:** licencia Apache o acuerdo comercial, o necesidad real de RGBA/edición por
+referencia en local con material sensible. Fuentes: HF Qwen/Comfy-Org/unsloth, kgptalkie (bench 36 GB),
+modelfit.io (Apple Silicon), locallyuncensored (arquitectura/licencia).
