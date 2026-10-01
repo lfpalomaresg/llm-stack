@@ -152,7 +152,20 @@ _cargar() {  # $1 = modelo, $2 = contexto, $3 = ttl en segundos (opcional, def. 
     lms unload "$modelo" 2>/dev/null   # cargado con otro perfil: recargar limpio
   fi
   lms load "$modelo" --context-length "$ctx" "${ttl_flag[@]}" -y >/dev/null 2>&1
-  if _loaded "$modelo"; then return 0; fi
+  if _loaded "$modelo"; then
+    # 2026-10-01 TRIPWIRE: LM Studio 0.4.2x con el runtime MLX 1.10.1/1.11.0 IGNORA el contexto
+    # pedido y "auto-ajusta" al máximo que cabe en RAM (bug-tracker #2250/#2318): el explorador
+    # cargó a 196k, aceptó un prompt de 88k y el swap subió a 9 GB. Solo el runtime 1.10.0 lo
+    # respeta. Si el contexto real no es el pedido, se descarga y se avisa: nunca servir a ciegas.
+    local ctx_real; ctx_real=$(_ctx_cargado "$modelo")
+    if [ "$ctx_real" != "$ctx" ]; then
+      lms unload "$modelo" 2>/dev/null
+      echo "ERROR: '$modelo' cargó con contexto $ctx_real en vez de $ctx (auto-fit de LM Studio)." >&2
+      echo "   Fija el runtime MLX que lo respeta: lms runtime select mlx-llm-mac-arm64-apple-metal-advsimd@1.10.0" >&2
+      return 1
+    fi
+    return 0
+  fi
   echo "ERROR: no se pudo cargar '$modelo' (¿RAM insuficiente? ¿otro modelo grande cargado?)" >&2
   return 1
 }
@@ -286,6 +299,7 @@ case "$1" in
     ;;
   status)
     echo "── LM Studio (cargados) ──"; lms ps 2>/dev/null || echo "  (lms no disponible)"
+    echo "── Runtime MLX (debe ser 1.10.0: 1.10.1/1.11.0 ignoran el contexto) ──"; lms runtime ls 2>/dev/null | grep -E "mlx.*✓" || echo "  (sin runtime MLX seleccionado)"
     echo "── LiteLLM ──"
     curl -s -m 3 http://localhost:4000/v1/models -H "Authorization: Bearer x" | python3 -m json.tool 2>/dev/null || echo "no responde en :4000"
     [ -d "$LOCKDIR" ] && echo "── ⚠️ lock activo (pid $(cat $LOCKDIR/pid 2>/dev/null)) ──"

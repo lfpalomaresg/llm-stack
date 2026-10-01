@@ -7,8 +7,11 @@ ID, LABEL, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 API = "http://localhost:1234/v1/chat/completions"
 
 def call(prompt, maxtok=3000):
-    payload = json.dumps({"model": ID, "temperature": 0.2, "top_p": 0.8, "max_tokens": maxtok,
-        "messages": [{"role": "user", "content": prompt}]}).encode()
+    body = {"model": ID, "temperature": 0.2, "top_p": 0.8, "max_tokens": maxtok,
+        "messages": [{"role": "user", "content": prompt}]}
+    # 2026-10-01: campos extra por entorno (p.ej. BENCH_EXTRA_JSON='{"reasoning_effort":"none"}')
+    body.update(json.loads(os.environ.get("BENCH_EXTRA_JSON", "{}")))
+    payload = json.dumps(body).encode()
     t0 = time.time()
     req = urllib.request.Request(API, data=payload, headers={"Content-Type": "application/json"})
     try:
@@ -17,6 +20,9 @@ def call(prompt, maxtok=3000):
         return 0, 0, f"__ERROR__ {e}"
     dt = time.time() - t0
     m = r["choices"][0]["message"]
+    # tokens de razonamiento si el servidor los reporta (LM Studio: completion_tokens_details)
+    rt = (r.get("usage", {}).get("completion_tokens_details") or {}).get("reasoning_tokens", 0)
+    call.reasoning = getattr(call, "reasoning", 0) + (rt or 0)
     return dt, r.get("usage", {}).get("completion_tokens", 0), m.get("content", "") or ""
 
 def extract_code(txt):
@@ -58,7 +64,7 @@ for i, (prompt, test) in enumerate(TASKS, 1):
     passed, err = run_test(code, test)
     if passed: ok += 1
     lines.append(f"C{i} [{dt:.0f}s/{ct}t] {'✅ PASS' if passed else '❌ FAIL: '+err}")
-lines.append(f"\nCODIGO: {ok}/{len(TASKS)} PASS | media {tt//len(TASKS)} tok/tarea | vel media {tt/max(ts,0.01):.1f} tok/s")
+lines.append(f"\nCODIGO: {ok}/{len(TASKS)} PASS | media {tt//len(TASKS)} tok/tarea | vel media {tt/max(ts,0.01):.1f} tok/s | razonamiento {getattr(call,'reasoning',0)} tok")
 lines.append(f"== FIN {LABEL} ==")
 open(OUT, "w").write("\n".join(lines))
 print(f"{LABEL}: {ok}/{len(TASKS)}")

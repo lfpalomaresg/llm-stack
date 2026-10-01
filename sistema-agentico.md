@@ -644,3 +644,36 @@ sería solo privacidad + 0 €. Si entrara alguna vez: JIT en serie como Josie, 
 **Disparador para reabrir:** licencia Apache o acuerdo comercial, o necesidad real de RGBA/edición por
 referencia en local con material sensible. Fuentes: HF Qwen/Comfy-Org/unsloth, kgptalkie (bench 36 GB),
 modelfit.io (Apple Silicon), locallyuncensored (arquitectura/licencia).
+
+## 20. Tripwire anti-bucle, LM Studio 0.4.25 y bench N2 vs N2.5 — 2026-10-01 (OK operador)
+
+**Incidencia 29-30/09 (3er bucle, el peor):** el orquestador cloud (V4-Pro) lanzó a `@worker` (R1-8B, 24k) la
+"MISIÓN C: SOHO_OPS, 5 rondas de refactor, MODELO LOCAL" (material Soho → local, correcto; alcance, no).
+**3.123 pasos y 1.562 errores idénticos en 17 h**, en bucle desde la PRIMERA petición (7 s tras arrancar):
+`tokens to keep > context length`. El 24k del fix del 14/09 estaba bien cargado; lo que desbordó fue el
+harness: **64 definiciones de herramienta MCP por petición** (supabase 29, github 26, playwright 25, m365 13,
+claude_workspace 14, imessage 4, context7 2) heredadas por el subagente local, más compactación con el
+mismo modelo que falla y sin tope de pasos. Los dos sprints hermanos en nube (`@general`) acabaron en 12 min.
+
+**Capa a (opencode):** `steps: 40` + `permission: "<mcp>_*": deny` en `worker.md`, `nexn2.md`,
+`explorador.md` (validado contra `opencode.ai/config.json`: `AgentConfig.steps`, `PermissionConfig`);
+`compaction.prune: true` en `opencode.json`. **Capa b (AGENTS.md v6.2):** "un subagente local = UNA ronda,
+nunca un sprint"; sensible y grande → `@nexn2` ronda a ronda o parar y preguntar; mismo error dos veces =
+cancelar. Capa c (vigilante externo) queda opcional.
+
+**LM Studio 0.4.16 → 0.4.25 (brew cask --force, app adoptada).** Tres trampas, las tres resueltas:
+(1) el proceso 0.4.16 seguía vivo tras `pkill` y `open -a` solo lo traía al frente → "Invalid load message";
+hay que matar app + `~/.lmstudio/.internal/utils/node` y relanzar. (2) `~/.lmstudio/bin/lms` era una COPIA
+del CLI viejo; copiar el nuevo fuera del bundle lo mata Gatekeeper (rc 137) → **symlink** al binario del
+bundle (`Contents/Resources/app/.webpack/lms`). (3) **El runtime MLX 1.10.1/1.11.0 ignora el contexto
+pedido** y auto-ajusta al máximo que cabe (bug-tracker #2250/#2318, sin fix): el explorador cargó a 196k,
+aceptó 88k tokens y el swap subió a 9 GB. **Medido: solo `mlx-llm@1.10.0` respeta `-c`** → fijado con
+`lms runtime select`, y `stack.sh _cargar` ahora verifica ctx real == pedido (si no, descarga y avisa);
+`status` muestra el runtime. Parches no-think y `defaultContextLength` sobrevivieron a la actualización.
+
+**Bench N2 vs N2.5:** `mlx-community/Nex-N2.5-mini-OptiQ-4bit` descargado (23,1 GB, id
+`nex-n2.5-mini-optiq`, carga a 32k y responde con `reasoning_effort: none`). Runner `bench-vs-nex.sh`
+(bench-coder.py ×3 pasadas: N2 · N2.5 defecto · N2.5 none, + latencia prompt 14k) programado por LaunchAgent
+`com.luisfran.bench-vs-nex` para el **02/10 03:00**, informe en `bench-vs-nex/REPORT-*.md` + notificación;
+deja el perfil AGENTE al terminar. Criterio: entra solo si iguala o mejora código, latencia y disciplina
+no-think (sin parche de template, que N2.5 trae nativo).

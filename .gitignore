@@ -15,3 +15,5 @@ __pycache__/
 .conclave/
 *.bak.*
 *.bak-*
+bench-vs-nex/*.log
+bench-vs-nex/launchd.*
