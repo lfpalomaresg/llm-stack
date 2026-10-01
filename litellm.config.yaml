@@ -151,6 +151,19 @@ model_list:
       model: openrouter/deepseek/deepseek-v4-pro   # $0.617/$1.233 por M · 1M ctx
       api_key: os.environ/OPENROUTER_API_KEY
 
+  # 2026-10-01 (OK operador) REPARTO: primario AGÉNTICO de opencode = DeepSeek-V4.1-Flash.
+  # Paper DeepSeek: DeepSWE 74,2 vs 62,7 y Terminal-Bench 3.0 30 vs 11,8 frente a V4-Pro; pierde en
+  # conocimiento factual (SimpleQA -13), contexto largo (LongBench-V2 -6) y multilingüe. Por eso
+  # hermes (conversación) y megacontext (documentos largos) SIGUEN en V4-Pro. Entrada 5-15x más barata.
+  # data_collection=deny: OpenRouter solo enruta a proveedores que no retienen ni entrenan con datos.
+  - model_name: cloud-agentic
+    litellm_params:
+      model: openrouter/deepseek/deepseek-v4.1-flash   # ~$0.02-0.05/$0.40-0.44 por M · 1M ctx
+      api_key: os.environ/OPENROUTER_API_KEY
+      extra_body:
+        provider:
+          data_collection: deny
+
   # Razonamiento / mates barato (hueco que faltaba). Tier pesado = cloud-megacontext (V4-Pro).
   - model_name: cloud-reasoning
     litellm_params:

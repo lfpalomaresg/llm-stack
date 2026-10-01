@@ -695,3 +695,33 @@ equipo donde Nex ya no cabe con el explorador. Sus mejoras publicadas son de com
 grounding (OSWorld), que el stack no usa en local. Bench pequeño: la diferencia de código es 1 tarea, así que
 la lectura es "no mejora", no "es peor"; lo decisivo es el razonamiento no desactivable y el peso.
 Los 23 GB de `nex-n2.5-mini-optiq` siguen en disco pendientes de OK para borrar.
+
+## 21. Reparto DeepSeek: V4.1-Flash primario agéntico, V4-Pro para conocimiento y contexto largo — 2026-10-01 (OK operador)
+
+**Reparto (un alias nuevo, nada más):** `cloud-agentic` → `deepseek/deepseek-v4.1-flash` con
+`provider.data_collection: deny`, primario de opencode. `cloud-coder-value` (V4-Pro) sigue de primario en
+**hermes** y como agente **`dpsk`** en opencode, ahora el salto consciente (Tab) para conocimiento factual sin
+búsqueda, contexto muy largo o razonamiento difícil. `cloud-megacontext` sigue en V4-Pro. 19 alias.
+Motivo (paper DeepSeek, tabla 1): Flash gana en agente (DeepSWE 74,2 vs 62,7; Terminal-Bench 3.0 30 vs 11,8)
+y pierde en conocimiento (SimpleQA 42,3 vs 55,2), contexto largo (LongBench-V2 45,2 vs 51,5) y multilingüe.
+
+**A/B en opencode headless (`--dir`, sin subagentes, carpetas aisladas):**
+
+| | V4.1-Flash | V4-Pro |
+|---|---|---|
+| T1 arreglar 5 fallos en 2 ficheros (tests intactos) | ✅ 8,6 s · 5 pasos | ✅ 30,0 s · 9 pasos |
+| T1 tokens entrada / salida+razonamiento / caché | 40,6k / 1,6k / 170k | 42,3k / 3,4k / 352k |
+| T2 análisis de cobertura de stack.sh (verdad conocida) | ✅ 6,4 s · 3 pasos | ✅ 11,9 s · 2 pasos |
+
+Los dos aciertan todo; Flash es **2-3,5× más rápido** y gasta la mitad de salida y caché. Coste real de las
+cuatro ejecuciones juntas: 0,185 $ (OpenRouter asienta el coste con retraso; el reparto por ejecución
+no es fiable, opencode no calcula coste con proveedor propio).
+
+**Corrección de la estimación de precio:** con `data_collection: deny` OpenRouter excluye a los proveedores
+baratos de Flash (0,016 $/M) y sirve desde Together/StreamLake/Fireworks a 0,14-0,30 $/M entrada y
+0,56-1,20 $/M salida. Por tarea, Flash cuesta **lo mismo o algo menos** que V4-Pro, no 5-15× menos:
+la ganancia es velocidad y calidad agéntica, no precio. **Incoherencia pendiente:** el alias de V4-Pro NO
+lleva el filtro y hoy se sirve desde Baidu y StreamLake (sede en China) a 0,23 $/M; con el filtro subiría a
+~1,5-1,7 $/M entrada. Decisión del operador: filtro en todos los alias cloud o en ninguno.
+
+**Nex-N2.5 borrado** (22 GB) con OK del operador tras el bench. Libre: 285 GB.
