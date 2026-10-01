@@ -677,3 +677,21 @@ aceptó 88k tokens y el swap subió a 9 GB. **Medido: solo `mlx-llm@1.10.0` resp
 `com.luisfran.bench-vs-nex` para el **02/10 03:00**, informe en `bench-vs-nex/REPORT-*.md` + notificación;
 deja el perfil AGENTE al terminar. Criterio: entra solo si iguala o mejora código, latencia y disciplina
 no-think (sin parche de template, que N2.5 trae nativo).
+
+**Resultado del bench N2 vs N2.5 (01/10 08:17, lanzado a mano; el LaunchAgent de las 03:00 se retiró):**
+
+| | N2-mini (actual) | N2.5 adaptativo | N2.5 `reasoning_effort: none` |
+|---|---|---|---|
+| Código (6 verificables) | **6/6** | 5/6 | 5/6 |
+| Tokens por tarea | **68** | 127 | 164 |
+| Razonamiento total | **0** | 372 | 580 |
+| Velocidad | **82,5 t/s** | 76,1 | 77,3 |
+| Prompt 26,6k frío / caliente | 25,5 s / 0,9 s | 26,9 s / 1,0 s | — |
+| RAM | **20,4 GB** | 23,1 GB | 23,1 GB |
+
+**Veredicto: N2.5 NO entra.** Falla la misma tarea en ambos modos (C6, merge de dicts), piensa aunque se pida
+`none` (LM Studio no pasa `reasoning_effort` al template: 580 tokens de razonamiento) y pesa 2,7 GB más en un
+equipo donde Nex ya no cabe con el explorador. Sus mejoras publicadas son de computer-use/browsing/visual
+grounding (OSWorld), que el stack no usa en local. Bench pequeño: la diferencia de código es 1 tarea, así que
+la lectura es "no mejora", no "es peor"; lo decisivo es el razonamiento no desactivable y el peso.
+Los 23 GB de `nex-n2.5-mini-optiq` siguen en disco pendientes de OK para borrar.
