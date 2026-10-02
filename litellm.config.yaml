@@ -120,12 +120,18 @@ model_list:
       # era el peor de 4 candidatos en coste/tarea. Backup: .bak.20260828-glm53
       model: openrouter/z-ai/glm-5.3           # $1.40/$4.40 por M · 1.3M ctx · pero ~5x menos verboso
       api_key: os.environ/OPENROUTER_API_KEY
+      extra_body:
+        provider:
+          data_collection: deny
 
   # Escalon de codigo LIGERO: 38x mas barato que el viejo GLM-5.2 por tarea, 6/6 en el bench.
   - model_name: cloud-coder-flash
     litellm_params:
       model: openrouter/z-ai/glm-5.3-flash     # $0.075/$0.25 por M · rey del valor (mas lento)
       api_key: os.environ/OPENROUTER_API_KEY
+      extra_body:
+        provider:
+          data_collection: deny
 
   # cloud-coder-next (Qwen3-Coder-Next 80B) RETIRADO 2026-09-08 (OK operador): apenas
   # se usaba; cloud-coder-value (V4-Pro) cubre el escalado barato y cloud-coder (GLM-5.3) lo duro.
@@ -140,12 +146,18 @@ model_list:
     litellm_params:
       model: openrouter/deepseek/deepseek-v4-pro   # $0.21/$0.42 por M · 1M ctx
       api_key: os.environ/OPENROUTER_API_KEY
+      extra_body:
+        provider:
+          data_collection: deny
 
   # Techo multimodal duro / long-horizon (la opcion de 1M mas cara del tablero; solo cuando toque).
   - model_name: cloud-megacontext-max
     litellm_params:
       model: openrouter/moonshotai/kimi-k3         # $3/$15 por M · 1M ctx
       api_key: os.environ/OPENROUTER_API_KEY
+      extra_body:
+        provider:
+          data_collection: deny
 
   # Coder de VALOR (default de escalado): mismo V4-Pro, intent codigo. GLM-5.3 (cloud-coder)
   # queda solo para lo mas duro. ~3.5x mas barato en output que GLM-5.3.
@@ -153,6 +165,9 @@ model_list:
     litellm_params:
       model: openrouter/deepseek/deepseek-v4-pro   # $0.21/$0.42 por M · 1M ctx
       api_key: os.environ/OPENROUTER_API_KEY
+      extra_body:
+        provider:
+          data_collection: deny
 
   # 2026-10-01 (OK operador) REPARTO: primario AGÉNTICO de opencode = DeepSeek-V4.1-Flash.
   # Paper DeepSeek: DeepSWE 74,2 vs 62,7 y Terminal-Bench 3.0 30 vs 11,8 frente a V4-Pro; pierde en
@@ -172,12 +187,18 @@ model_list:
     litellm_params:
       model: openrouter/deepseek/deepseek-v3.2     # $0.269/$0.400 por M · 164k ctx
       api_key: os.environ/OPENROUTER_API_KEY
+      extra_body:
+        provider:
+          data_collection: deny
 
   # Trigger: vídeo / docs visuales que local-general no resuelve
   - model_name: cloud-vision
     litellm_params:
       model: openrouter/minimax/minimax-m3     # $0.30/$1.20 por M · 1M ctx
       api_key: os.environ/OPENROUTER_API_KEY
+      extra_body:
+        provider:
+          data_collection: deny
 
 litellm_settings:
   drop_params: true        # tolera params que un backend no soporte
