@@ -1,5 +1,5 @@
 #!/bin/zsh
-# LLM Stack v5.3 — control del stack local
+# LLM Stack v5.6 — control del stack local
 # Uso: stack.sh start | stop | code | general | agente | ligero | status | daemon
 #      Variables: FORCE=1 → permite desalojar un grande en uso (uso consciente)
 #

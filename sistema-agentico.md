@@ -728,6 +728,45 @@ lleva el filtro y hoy se sirve desde Baidu y StreamLake (sede en China) a 0,23 $
 
 ---
 
+## §23 — Segundo round de automejora (2026-10-02, segundo ciclo)
+
+> Ciclo autónomo ejecutado en la misma sesión que §22, a continuación. Pedido del operador:
+> "Realiza otro round de tres loops para implementar mejoras y desarrollo de nuestro sistema agéntico."
+
+### Auditoría previa: hallazgos nuevos
+
+| Archivo | Problema detectado |
+|---|---|
+| `llm-stack/llm-stack-v5.md` | **CRÍTICO**: completamente desactualizado (v5.0/08-08-02). Tabla de modelos con todos los modelos retirados (Coder-30B, 35B, GLM-5.2, cloud-coder-next). Perfiles CODE/GENERAL/LIGERO obsoletos. Sin cloud-agentic, sin dual-plane, sin data_collection:deny, sin historial de versiones |
+| `llm-stack/stack.sh` | Comentario de versión "v5.3" en la cabecera (el código real es v5.6) |
+| `AI_OS/ROADMAP.md` | Fase 2 dice "Ollama" (retirado); Fase 5 marcada como "⏳" con "laboratorio Ollama" (completada con LM Studio) |
+| `AI_OS/SISTEMA.md` | Lista de alias para Claude Code incompleta: 13 alias v5.3 vs 19 alias v5.6 reales; faltan cloud-agentic, cloud-coder-flash, cloud-reasoning, etc. |
+
+### Loop 1 — llm-stack-v5.md reescrito
+
+Secciones actualizadas:
+- **Header**: añadido "Última actualización: 2026-10-02 (v5.6)" y referencia a sistema-agentico.md
+- **Arquitectura**: diagrama reescrito con dos planos (local/cloud) y modelos reales; ley de frontera v5.6
+- **Tabla de modelos**: completa reescritura — 8 locales (Nex, R1-8B, Qwen3.5-9B, embed, gpt-oss-20b, Phi-4, Gemma, uncensored), 2 gratis via agy-bridge, 8 cloud con precios actualizados y nota de data_collection:deny
+- **Perfiles de RAM**: CODE retirado → AGENTE (default), GENERAL, LIGERO con descripciones de cuándo usar cada uno
+- **Operación diaria**: `stack.sh code` → `stack.sh agente`; JIT explicado
+- **Archivos del stack**: simlink 35B marcado como RETIRADO; sistema-agentico.md añadido
+- **Disciplina de perfiles**: actualizada a v5.6 (opencode → AGENTE, hermes → GENERAL)
+- **Historial de versiones**: tabla completa v5.0 → v5.6 añadida al final
+
+### Loop 2 — Ficheros menores AI_OS + stack.sh
+
+- **ROADMAP.md**: Fase 2 "Ollama" → LM Studio; Fase 5 ⏳ → ✅ completada
+- **SISTEMA.md**: lista de alias ampliada a 19 (v5.6) con referencia al litellm.config.yaml
+- **stack.sh**: comentario de versión v5.3 → v5.6
+
+### Loop 3 — Commits + push
+
+- `llm-stack`: `llm-stack-v5.md`, `stack.sh`, `sistema-agentico.md` (§23) → commit + push
+- `AI_OS`: `ROADMAP.md`, `SISTEMA.md`, nota de sesión, PENDING_MAC → commit + push
+
+---
+
 ## §22 — Snapshot de estado del sistema agentico (2026-10-02)
 
 > Fotografía del estado real del stack. La toma Claude (Dispatch/Cowork) tras el ciclo de 3
