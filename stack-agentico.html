@@ -389,10 +389,10 @@
         </div>
 
                 <div class="m">
-          <div class="m-top"><span class="m-alias">cloud-agentic</span><span class="m-role">Primario opencode ★</span></div>
+          <div class="m-top"><span class="m-alias">cloud-agentic</span><span class="m-role">Primario opencode ★ · Visión primaria</span></div>
           <div class="m-real">deepseek/deepseek-v4.1-flash</div>
-          <p class="m-fn">Primario de opencode desde 2026-10-01. Worker cloud rápido para micro-tareas de pipeline (routing, extracción, clasificación). 2-4× más rápido que V4-Pro en latencia; coste equivalente en tareas cortas. V4-Pro más barato en outputs largos y orquestación.</p>
-          <div class="chips"><span class="chip pay">$0,02-0,05 / $0,40-0,44 M</span><span class="chip">1M ctx</span></div>
+          <p class="m-fn">Primario de opencode desde 2026-10-01. Worker cloud rápido para micro-tareas de pipeline (routing, extracción, clasificación). 2-4× más rápido que V4-Pro en latencia; coste equivalente en tareas cortas. V4-Pro más barato en outputs largos y orquestación. <b>Multimodal nativo desde 10/09/2026</b> (encoder DeepSeek-ViT propio, hasta 1344×1344 px): usar directamente para visión estándar (capturas UI, docs, imágenes). cloud-vision (MiniMax-M3) solo para calidad máxima o multi-imagen especializada.</p>
+          <div class="chips"><span class="chip pay">$0,02-0,05 / $0,40-0,44 M</span><span class="chip">1M ctx</span><span class="chip">multimodal</span></div>
         </div>
         <div class="m">
           <div class="m-top"><span class="m-alias">cloud-megacontext</span><span class="m-role">Contexto gigante</span></div>
@@ -416,9 +416,9 @@
         </div>
 
         <div class="m">
-          <div class="m-top"><span class="m-alias">cloud-vision</span><span class="m-role">Visión pesada</span></div>
+          <div class="m-top"><span class="m-alias">cloud-vision</span><span class="m-role">Visión especializada</span></div>
           <div class="m-real">minimax/minimax-m3</div>
-          <p class="m-fn">Vídeo o documentos visuales que el orquestador local no resuelve. Barato para 1M de contexto multimodal.</p>
+          <p class="m-fn">Visión de máxima calidad o multi-imagen especializada. Para visión estándar (capturas UI, docs) usar cloud-agentic (V4.1-Flash multimodal) — más rápido y sin cambiar de modelo. cloud-vision entra cuando se necesita calidad superior o vídeo.</p>
           <div class="chips"><span class="chip">$0,30 / $1,20 M</span><span class="chip">1M ctx</span></div>
         </div>
       </div>
@@ -438,7 +438,7 @@
           <tr><td>Coder</td><td>local-coder (→ Nex) · dpsk</td><td>Nex para sensible acotado <span class="res">· V4-Pro (dpsk) para grande NO sensible</span></td><td class="res">local / cloud consciente</td></tr>
           <tr><td>Workers ×4</td><td>local-worker</td><td>DeepSeek-R1-8B</td><td class="res">local</td></tr>
           <tr><td>Revisores (careo)</td><td>local-reasoner · -reviewer-ms · -auditor</td><td>gpt-oss-20b · Phi-4 · Gemma-4</td><td class="res">local</td></tr>
-          <tr><td>Red-team / seguridad</td><td>local-uncensored</td><td>Josiefied-30B abliterado</td><td class="res">local</td></tr>
+          <tr><td>Red-team / brainstorm / revisión creativa</td><td>local-uncensored (@brainstorm)</td><td>Josiefied-30B abliterado · JIT, evicta Nex</td><td class="res">local</td></tr>
           <tr><td>Revisión externa</td><td>—</td><td>Codex · Gemini · Claude</td><td class="res">frontera USA</td></tr>
           <tr><td>RAG</td><td>local-embed</td><td>Qwen3-Embedding-0.6B</td><td class="res">local</td></tr>
         </tbody>
@@ -464,7 +464,7 @@
             <tr><td>red-team</td><td>Josie sola <span class="res">· auditoría seguridad (el más holgado, 68% libre)</span></td><td class="res">17 GB</td></tr>
           </tbody>
         </table>
-        <p style="font-size:12.5px;color:var(--soft);margin:12px 2px 0;">Regla intacta: <b>nunca dos grandes a la vez</b> (guardarraíl de LM Studio). Cualquier careo evicta el orquestador y lo <b>recalienta</b> al terminar. <b>Medido 09/09:</b> un swap completo (evicción 2s + cargar grande ~10s) es <b>~12s, no minutos</b>. Swap por potencia: código serio→V4-Pro (cloud-coder-value) · contexto gigante→V4-Pro (cloud-megacontext) · visión→cloud-vision. Perfil CODE retirado 10/09.</p>
+        <p style="font-size:12.5px;color:var(--soft);margin:12px 2px 0;">Regla intacta: <b>nunca dos grandes a la vez</b> (guardarraíl de LM Studio). Cualquier careo evicta el orquestador y lo <b>recalienta</b> al terminar. <b>Medido 09/09:</b> un swap completo (evicción 2s + cargar grande ~10s) es <b>~12s, no minutos</b>. Swap por potencia: código serio→V4-Pro (cloud-coder-value) · contexto gigante→V4-Pro (cloud-megacontext) · visión estándar→cloud-agentic (V4.1-Flash multimodal) · visión máxima→cloud-vision. Perfil CODE retirado 10/09.</p>
       </div>
 
       <div class="panel rule-card">
@@ -483,7 +483,7 @@
   </section>
 
   <footer>
-    <span>Stack Agéntico v5.6 · Mac M4 Max 36 GB · foto 2026-09-10</span>
+    <span>Stack Agéntico v5.6 · Mac M4 Max 36 GB · foto 2026-10-02</span>
     <span class="fix">✓ un solo grande local (Nex) · salto consciente dpsk → V4-Pro · Claude CLI orquesta · careo 0 €</span>
   </footer>
 </div>
