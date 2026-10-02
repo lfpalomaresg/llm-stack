@@ -725,3 +725,45 @@ lleva el filtro y hoy se sirve desde Baidu y StreamLake (sede en China) a 0,23 $
 ~1,5-1,7 $/M entrada. Decisión del operador: filtro en todos los alias cloud o en ninguno.
 
 **Nex-N2.5 borrado** (22 GB) con OK del operador tras el bench. Libre: 285 GB.
+
+---
+
+## §22 — Snapshot de estado del sistema agentico (2026-10-02)
+
+> Fotografía del estado real del stack. La toma Claude (Dispatch/Cowork) tras el ciclo de 3
+> loops de automejora autónoma sobre el sistema agentico completo (Mac + HP + iPhone).
+> Leer antes de proponer cambios de arquitectura en futuros ciclos.
+
+### Estado hardware
+| Equipo | Rol agentico | Stack IA local |
+|---|---|---|
+| MacBook Pro M4 Max | Orquestador principal; laboratorio IA | LM Studio v5.6: Nex-N2-mini (Qwen3.5-14B Q4 8 GB), R1-8B (workers ×4), Qwen3.5-9B (explorador residente 6 GB), gpt-oss-20b (razonador), Phi-4 (revisor), Gemma-E4B (auditor). LiteLLM proxea 19 alias. |
+| HP ProBook 440 14" | Trabajo Soho; orquestación cloud (sin IA local) | **Cero LLM local** (decisión 02/08 + medición 14/08). Solo cloud-* y hermes |
+| iPhone 14 Pro Max | Cliente ligero; captura y consulta | Sin IA local. Claude.ai app + Drive. Sin acceso a BD sensible |
+
+### Estado del stack Mac (v5.6)
+- **Plano de orquestación:** Claude Code (CLI, suscripción), opencode (sprints agénticos), Codex
+- **Plano de datos sensibles:** Nex-N2-mini única local grande (Soho/cliente/personal nunca salen del Mac)
+- **LiteLLM:** 19 alias activos (ver `~/llm-stack/litellm.config.yaml`). Supervisado por launchd (KeepAlive)
+- **Tripwire anti-bucle:** `steps: 40` + MCP `deny` en workers de opencode (§20, 2026-09-27)
+- **data_collection:deny:** aplicado en `cloud-agentic` (V4.1-Flash). NO aplicado en `cloud-coder-value` (V4-Pro/dpsk). Decisión pendiente del operador (uniformizar o dejar así)
+- **RAM opción b:** solo Qwen3.5-9B reside permanentemente (6 GB); Nex y R1-8B son JIT. Libre ~285 GB tras borrar Nex-N2.5
+
+### Orquestadores por equipo (2026-10-02)
+| Orquestador | Equipo | Primario para | Modelo(s) |
+|---|---|---|---|
+| Claude Code CLI | Mac + HP | Todo el desarrollo; tareas largas | claude-sonnet-4-6 (suscripción) |
+| opencode | Mac | Sprints agénticos autónomos | cloud-agentic (V4.1-Flash) primario; local-general (Nex) para sensibles |
+| hermes | Mac | Contexto gigante (repo entero + logs) | cloud-megacontext (V4-Pro 1M) |
+| Codex | Mac + HP | Segunda opinión; código duro | ChatGPT (suscripción) |
+| iPhone (Claude app) | iPhone | Consulta conversacional | claude-sonnet-4-6 cloud |
+
+### Mejoras aplicadas en este ciclo (2026-10-02)
+1. **JERARQUIA_IA.md → v5.7**: header corregido, local-fast = explorador residente, §2 con 19 alias completos, §3 con cloud-agentic como primario agéntico, regla tripwire documentada
+2. **WORKFLOWS.md**: Ollama → LM Studio, opencode añadido a la tabla de IAs y al flujo, dual-plane v5.6 documentado, iPhone workflow añadido como sección propia
+3. **STACK_AND_TOOLS.md**: Ollama → LM Studio con modelos reales, opencode añadido, iPhone "Consulta" → descripción de cliente ligero con frontera de datos
+
+### Pendientes del operador (no automatizables)
+- Decidir: `data_collection:deny` en todos los alias cloud o solo en cloud-agentic (§21)
+- PR #1 radar-fricciones (opencode watchlog vs priorizacion.md): revisar y cerrar
+- git push radar-fricciones tras revisar `docs/radar.html`
