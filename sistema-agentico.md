@@ -806,3 +806,62 @@ Secciones actualizadas:
 - Decidir: `data_collection:deny` en todos los alias cloud o solo en cloud-agentic (§21)
 - PR #1 radar-fricciones (opencode watchlog vs priorizacion.md): revisar y cerrar
 - git push radar-fricciones tras revisar `docs/radar.html`
+
+## §24 — Tercer round de 5 loops de automejora (2026-10-02)
+
+**Pedido:** "Otro round de 5 loops incluyendo skills, hooks, loops y grafos, apps y programas"  
+**Modelo:** claude-sonnet-4-6 (Dispatch/Cowork)
+
+### Auditoría previa
+
+| Archivo | Problema encontrado |
+|---|---|
+| `llm-stack/stack-agentico.html` | "18 alias" × 3 ocurrencias (real: 19 desde v5.6) + "CODE" en hint de swap (perfil retirado 10/09) |
+| `enrutador-ia/SKILL.md` | Tabla de reparto sin `cloud-agentic`; Two-way opencode apuntaba a `local-general` |
+| `REGLAS_ENRUTAMIENTO.md` | Sin sección para `cloud-agentic` (añadido a enrutar.sh el 01/10 sin documentar) |
+| `skill-sistema-status` | No existía — diagnóstico de salud del stack tenía que hacerse manual |
+| `ciclo-automejora.sh` | OK — no tocar |
+| `enrutar.sh` | Ya tenía `cloud-agentic` (línea 344, añadido 01/10) — correcto |
+
+### Loop 1 — Grafo (stack-agentico.html)
+
+- Fecha: `2026-09-10` → `2026-10-02`
+- 3× `18 alias` → `19 alias` (lede, SVG, cabecera §02)
+- Hint de swap: `código serio→CODE` → `código serio→V4-Pro (cloud-coder-value)` + `Perfil CODE retirado 10/09`
+
+### Loop 2 — Skill (enrutador-ia/SKILL.md)
+
+- Destinos list: añadido `cloud-agentic`
+- Tabla de reparto: nueva fila `cloud-agentic` (DeepSeek-V4.1-Flash, primario opencode, steps:40, MCP deny, NO sensible)
+- Two-way §opencode: `local-general` → `cloud-agentic` (primario v5.6) con fallback `local-general` si sensible
+
+### Loop 3 — Reglas (REGLAS_ENRUTAMIENTO.md)
+
+- Nueva sección `## cloud-agentic — primario opencode v5.6 (2026-10-01)` con:
+  modelo, comparativa V4.1-Flash vs V4-Pro, guardarrailes (steps:40, MCP deny), frontera de datos, escalado, data_collection
+
+### Loop 4 — Nueva skill (skill-sistema-status)
+
+Creada desde cero en `BIBLIOTECA/skills/skill-sistema-status/SKILL.md`.  
+Diagnóstico de salud del stack en ≤30 s con 5 checks:
+1. LiteLLM :4000 (curl health)
+2. LM Studio :1234 + perfil RAM activo (AGENTE/GENERAL/LIGERO)
+3. agy-bridge :4010
+4. Registro del enrutador (últimas 5 entradas, busca errores/colgados)
+5. Informe ciclo de automejora (¿PENDIENTE DE REVISIÓN?)
+
+Formato de salida: tabla markdown con semáforo OK/ERROR + acción correctora.
+
+### Loop 5 — §24 + nota sesión + commits
+
+Este parágrafo. Commits a continuación.
+
+### Estado final
+
+| Fichero | Cambio |
+|---|---|
+| `llm-stack/stack-agentico.html` | 18→19 alias ×3, fecha, fix CODE ref |
+| `BIBLIOTECA/skills/enrutador-ia/SKILL.md` | cloud-agentic en destinos + tabla + Two-way |
+| `BIBLIOTECA/skills/enrutador-ia/REGLAS_ENRUTAMIENTO.md` | sección cloud-agentic v5.6 |
+| `BIBLIOTECA/skills/skill-sistema-status/SKILL.md` | nueva skill creada |
+| `llm-stack/sistema-agentico.md` | §24 añadido |
