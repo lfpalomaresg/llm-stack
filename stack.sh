@@ -1,6 +1,6 @@
 #!/bin/zsh
 # LLM Stack v5.6 — control del stack local
-# Uso: stack.sh start | stop | code | general | agente | ligero | status | daemon
+# Uso: stack.sh start | stop | code | general | agente | ligero | voz | voz-stop | status | daemon
 #      Variables: FORCE=1 → permite desalojar un grande en uso (uso consciente)
 #
 # Perfiles (nunca 2 grandes a la vez — regla anti-cuelgue):
@@ -39,6 +39,68 @@ WORKER="deepseek/deepseek-r1-0528-qwen3-8b"   # workers ×N con razonamiento R1 
 # Sustituye al R1-8B que hacía de "fast" desde el 08/09 (razona: mal encaje para un rol sin
 # razonamiento). Revertir = FAST="$WORKER".
 FAST="qwen3.5-9b-mlx"
+
+# VOZ (2026-10-17, OK operador): Voicebox (backend FastAPI+MCP, ~/llm-stack/voicebox) carga
+# sus propios modelos de voz con MLX — EXCEPCIÓN ACOTADA a la Regla nº1 ("solo LM Studio
+# carga modelos"): solo vía `stack.sh voz`, nunca con Nex (GENERAL) en RAM y viceversa
+# (incidente IOGPU 21/08: churn de memoria de GPU). Test: zsh ~/llm-stack/test-perfil-voz.sh
+# Careo Codex 17/10 (ronda 1): identidad de PID, lectura de `lms ps` obligatoria, explorador
+# residente (bloquea el JIT de Nex vía LiteLLM), /health con -f, lock en voz-stop.
+VOICEBOX_DIR=~/llm-stack/voicebox
+VOICEBOX_CMD="${VOICEBOX_CMD:-$VOICEBOX_DIR/run.sh}"            # overrides solo para tests
+VOICEBOX_PATRON="${VOICEBOX_PATRON:-backend.main}"              # identidad en `ps` (PID reciclado)
+VOICEBOX_PIDFILE="${VOICEBOX_PIDFILE:-$VOICEBOX_DIR/voicebox.pid}"
+VOICEBOX_LOGDIR="${VOICEBOX_LOGDIR:-$VOICEBOX_DIR}"
+VOICEBOX_URL="${VOICEBOX_URL:-http://127.0.0.1:17493}"
+VOICEBOX_ESPERA="${VOICEBOX_ESPERA:-180}"                      # s hasta que /health da 2xx
+# Altavoz headless: el backend solo genera; este proceso reproduce (afplay) lo que piden los agentes.
+VOICEBOX_ALTAVOZ_CMD="${VOICEBOX_ALTAVOZ_CMD:-/usr/bin/python3 $VOICEBOX_DIR/altavoz.py}"
+VOICEBOX_ALTAVOZ_PATRON="${VOICEBOX_ALTAVOZ_PATRON:-altavoz.py}"
+VOICEBOX_ALTAVOZ_PIDFILE="${VOICEBOX_ALTAVOZ_PIDFILE:-$VOICEBOX_DIR/altavoz.pid}"
+_pid_es() {  # $1 pidfile · $2 patrón: 0 si el PID vive Y su línea de comando contiene el patrón
+  local p; [ -f "$1" ] || return 1
+  p="$(cat "$1" 2>/dev/null)"; [[ "$p" == <-> ]] || return 1
+  kill -0 "$p" 2>/dev/null || return 1
+  ps -o command= -p "$p" 2>/dev/null | grep -qF -- "$2"
+}
+_voz_viva() { _pid_es "$VOICEBOX_PIDFILE" "$VOICEBOX_PATRON"; }
+_altavoz_vivo() { _pid_es "$VOICEBOX_ALTAVOZ_PIDFILE" "$VOICEBOX_ALTAVOZ_PATRON"; }
+_para_pid() {  # $1 pidfile · $2 patrón: SIGTERM, 10 s, SIGKILL — SOLO si el PID es el nuestro
+  local p
+  if _pid_es "$1" "$2"; then
+    p="$(cat "$1")"; kill "$p" 2>/dev/null
+    for _ in 1 2 3 4 5 6 7 8 9 10; do kill -0 "$p" 2>/dev/null || break; sleep 1; done
+    kill -0 "$p" 2>/dev/null && kill -9 "$p" 2>/dev/null
+  fi
+  rm -f "$1"
+}
+_ps_snapshot() {  # imprime UNA lectura de `lms ps --json` validada como lista; 1 si falla
+  # Careo R2: decidir sobre una sola lectura evita el TOCTOU de leer varias veces (una
+  # sana y otra fallida tomaban a Nex por ausente). Un fallo NO es "nada cargado".
+  local j; j="$(lms ps --json 2>/dev/null)" || return 1
+  # Careo R3: cada elemento debe ser un objeto con `identifier` texto ([null] no pasa).
+  print -r -- "$j" | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if isinstance(d, list) and all(isinstance(m, dict) and isinstance(m.get("identifier"), str) for m in d) else 1)' 2>/dev/null || return 1
+  print -r -- "$j"
+}
+_en_snapshot() {  # $1 snapshot · $2 identifier: 0 si está cargado
+  print -r -- "$1" | python3 -c 'import json,sys; sys.exit(0 if any(m.get("identifier")==sys.argv[1] for m in json.load(sys.stdin)) else 1)' "$2"
+}
+_arranca_altavoz() {
+  _para_pid "$VOICEBOX_ALTAVOZ_PIDFILE" "$VOICEBOX_ALTAVOZ_PATRON"
+  local marca; marca=$(wc -l < "$VOICEBOX_LOGDIR/altavoz.log" 2>/dev/null || echo 0)
+  nohup env VOICEBOX_URL="$VOICEBOX_URL" VOICEBOX_PID="$(cat "$VOICEBOX_PIDFILE")" VOICEBOX_PATRON="$VOICEBOX_PATRON" \
+    ${=VOICEBOX_ALTAVOZ_CMD} >> "$VOICEBOX_LOGDIR/altavoz.log" 2>&1 &
+  echo $! > "$VOICEBOX_ALTAVOZ_PIDFILE"
+  # Sin esperar, un speak pedido justo después del arranque llega antes de que el altavoz se
+  # suscriba a /events/speak y se pierde (visto el 17/10). Hasta 10 s.
+  for _ in {1..20}; do
+    tail -n +$((marca + 1)) "$VOICEBOX_LOGDIR/altavoz.log" 2>/dev/null | grep -q "conectado a /events/speak" && return 0
+    _altavoz_vivo || break
+    sleep 0.5
+  done
+  _para_pid "$VOICEBOX_ALTAVOZ_PIDFILE" "$VOICEBOX_ALTAVOZ_PATRON"
+  return 1
+}
 
 # ── Guarda: sin `lms` no se toca la RAM (evita falsos "no hay nada cargado") ──
 _require_lms() {
@@ -238,6 +300,10 @@ case "$1" in
     # incluso con el 65 % de la RAM libre. El relevo automático de LM Studio solo ocurre entre
     # modelos JIT y el explorador lo carga stack.sh, así que hay que desalojarlo a propósito.
     # Al terminar con Nex: `stack.sh agente` devuelve el explorador (lo usan @explorador y el bot).
+    if _voz_viva; then
+      echo "⛔ Voicebox está corriendo (PID $(cat "$VOICEBOX_PIDFILE")): no cargo Nex encima. Para la voz con 'stack.sh voz-stop'."
+      exit 6
+    fi
     _desalojar_intrusos general || exit 5
     lms unload "$FAST" 2>/dev/null
     _cargar "$GENERAL" 32768 1800 \
@@ -265,6 +331,62 @@ case "$1" in
   ligero)
     _require_lms; _lock 60 || exit 4
     _perfil "" ligero 0 "$FAST" 32768 0 0 && echo "Perfil LIGERO activo (solo explorador)"
+    ;;
+  voz)
+    _require_lms; _lock 60 || exit 4
+    if ! snap="$(_ps_snapshot)"; then
+      echo "⛔ No puedo leer 'lms ps --json': sin saber qué hay en RAM no arranco la voz."; exit 7
+    fi
+    if _voz_viva; then
+      if ! _altavoz_vivo; then
+        echo "Altavoz caído: lo relanzo"
+        _arranca_altavoz || { echo "⚠️  Voicebox corre pero SIN altavoz: el MCP genera audio y no suena (log: $VOICEBOX_LOGDIR/altavoz.log)"; exit 8; }
+      fi
+      echo "Voicebox ya está corriendo (PID $(cat "$VOICEBOX_PIDFILE")) en $VOICEBOX_URL"; exit 0
+    fi
+    if _en_snapshot "$snap" "$GENERAL"; then
+      echo "⛔ $GENERAL está cargado: la voz no arranca con el grande en RAM (nunca 2 grandes). Pasa antes a 'stack.sh agente' o 'ligero'."
+      exit 6
+    fi
+    # Explorador RESIDENTE: con él en RAM, LM Studio rechaza el JIT de Nex por guardarraíl
+    # (medido 16/09). Es lo único que frena a Nex cuando lo pide un cliente vía LiteLLM
+    # (local-general/local-coder) sin pasar por `stack.sh general`.
+    _desalojar_intrusos voz || exit 5
+    _cargar "$FAST" 32768 0 || exit 1
+    rm -f "$VOICEBOX_PIDFILE"
+    # Nube de Voicebox fuera (VOICEBOX_CLOUD_ENABLED sin definir) y sin telemetría de HF.
+    nohup env -u VOICEBOX_CLOUD_ENABLED HF_HUB_DISABLE_TELEMETRY=1 \
+      "$VOICEBOX_CMD" --host 127.0.0.1 --port "${VOICEBOX_URL##*:}" \
+      >> "$VOICEBOX_LOGDIR/voicebox.log" 2>&1 &
+    echo $! > "$VOICEBOX_PIDFILE"
+    sano=0; espera=0
+    while (( espera < VOICEBOX_ESPERA )); do
+      curl -sf -m 2 "$VOICEBOX_URL/health" >/dev/null 2>&1 && { sano=1; break; }
+      _voz_viva || break
+      sleep 1; espera=$((espera + 1))
+    done
+    if (( ! sano )); then
+      echo "❌ Voicebox no respondió sano en /health en ${VOICEBOX_ESPERA}s: lo paro (log: $VOICEBOX_LOGDIR/voicebox.log)"
+      _para_pid "$VOICEBOX_PIDFILE" "$VOICEBOX_PATRON"; exit 1
+    fi
+    if ! _arranca_altavoz; then
+      echo "⚠️  Voicebox corre pero SIN altavoz: el MCP genera audio y no suena (log: $VOICEBOX_LOGDIR/altavoz.log). 'stack.sh voz' reintenta el altavoz; 'voz-stop' lo para todo."
+      exit 8
+    fi
+    echo "Perfil VOZ activo: Voicebox en $VOICEBOX_URL (MCP en /mcp/) · PID $(cat "$VOICEBOX_PIDFILE") · altavoz PID $(cat "$VOICEBOX_ALTAVOZ_PIDFILE") · 'stack.sh voz-stop' al terminar"
+    ;;
+  voz-stop)
+    _lock 60 || exit 4
+    _para_pid "$VOICEBOX_ALTAVOZ_PIDFILE" "$VOICEBOX_ALTAVOZ_PATRON"
+    if _voz_viva; then
+      p="$(cat "$VOICEBOX_PIDFILE")"
+      curl -s -m 10 -X POST "$VOICEBOX_URL/models/unload" >/dev/null 2>&1   # libera la GPU antes de matar
+      _para_pid "$VOICEBOX_PIDFILE" "$VOICEBOX_PATRON"
+      echo "Voicebox parado (PID $p)"
+    else
+      echo "Voicebox no estaba corriendo"
+    fi
+    rm -f "$VOICEBOX_PIDFILE"
     ;;
   daemon)
     # Modo LaunchAgent: LiteLLM en PRIMER PLANO bajo KeepAlive.
@@ -305,6 +427,6 @@ case "$1" in
     [ -d "$LOCKDIR" ] && echo "── ⚠️ lock activo (pid $(cat $LOCKDIR/pid 2>/dev/null)) ──"
     ;;
   *)
-    echo "Uso: stack.sh start | stop | code | general | agente | ligero | status | daemon"
+    echo "Uso: stack.sh start | stop | code | general | agente | ligero | voz | voz-stop | status | daemon"
     echo "     FORCE=1 stack.sh code|general  → desalojar un grande en uso a propósito" ;;
 esac

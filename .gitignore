@@ -17,3 +17,11 @@ __pycache__/
 *.bak-*
 bench-vs-nex/*.log
 bench-vs-nex/launchd.*
+
+# Voicebox (2026-10-17): se versionan SOLO los scripts propios (install.sh, run.sh, altavoz.py,
+# README.md). Fuera: código de terceros (src/, se reinstala con install.sh), venv, datos y logs.
+voicebox/src/
+voicebox/venv/
+voicebox/data/
+voicebox/pruebas/
+voicebox/*.pid

@@ -71,6 +71,10 @@ scripts    ──┘         ├── PLANO LOCAL (sensible — dato nunca sale
 | **GENERAL** | Nex-N2-mini 32k TTL 30 min (descarga el explorador) | ~20 GB | Tareas locales grandes, dato sensible, hermes local |
 | **LIGERO** | solo explorador | ~6 GB | Batería / background |
 
+| **VOZ** (2026-10-17) | Voicebox (backend + MCP + altavoz) sobre AGENTE/LIGERO | ~1,8 GB (Kokoro) | Voz de agentes (MCP `voicebox`), TTS local en español. **Se niega con Nex cargado y `general` se niega con la voz viva.** Ver `voicebox/README.md` |
+
+> **Excepción a la Regla nº1** (OK operador, 17/10): Voicebox carga sus propios modelos (MLX) fuera de LM Studio, **solo** vía `stack.sh voz` y nunca junto a GENERAL. Test: `zsh test-perfil-voz.sh`.
+
 > **CODE retirado** (2026-09-10): el Coder-30B se borró del disco. `stack.sh code` redirige a GENERAL.
 
 ## Operación diaria

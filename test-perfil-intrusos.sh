@@ -5,8 +5,10 @@
 # (p.ej. el qwen3.8-27b del bot, 15/09): con FORCE=1 se desaloja; sin FORCE, exit 5 nombrándolo.
 # Uso: zsh ~/llm-stack/test-perfil-intrusos.sh   (lms FALSO en PATH, no toca la RAM real)
 set -u
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
-mkdir -p "$TMP/bin"
+TMP=$(mktemp -d) || { print "ROJO: mktemp falló, el test no puede montarse"; exit 99; }
+[[ -n "$TMP" && -d "$TMP" ]] || { print "ROJO: sin directorio temporal"; exit 99; }   # careo 17/10
+trap 'rm -rf "$TMP"' EXIT
+mkdir -p "$TMP/bin" || exit 99
 cat > "$TMP/bin/lms" <<'EOF'
 #!/usr/bin/env python3
 import json, os, sys
@@ -50,7 +52,7 @@ _ids() { python3 -c 'import json,sys; print(" ".join(sorted(m["identifier"] for 
 _esperado() { python3 -c 'import sys; print(" ".join(sorted(sys.argv[1:])))' "$@"; }
 _run() {  # $@ = asignaciones de entorno extra (p.ej. FORCE=1)
   env PATH="$TMP/bin:$PATH" FAKE_LMS_STATE="$TMP/state.json" FAKE_LMS_LOG="$TMP/lms.log" \
-      LLM_STACK_LOCKDIR="$TMP/lock" "$@" zsh ~/llm-stack/stack.sh agente > "$TMP/out" 2>&1
+      LLM_STACK_LOCKDIR="$TMP/lock" VOICEBOX_PIDFILE="$TMP/sin-voz.pid" "$@" zsh ~/llm-stack/stack.sh agente > "$TMP/out" 2>&1
   print $?
 }
 _check() {  # $1 descripción · $2 obtenido · $3 esperado
@@ -95,7 +97,7 @@ print "6) Perfil GENERAL con el explorador residente: libera su RAM antes de car
 _estado "[]"; _run FORCE=1 > /dev/null          # deja el explorador residente
 _run_general() {
   env PATH="$TMP/bin:$PATH" FAKE_LMS_STATE="$TMP/state.json" FAKE_LMS_LOG="$TMP/lms.log" \
-      LLM_STACK_LOCKDIR="$TMP/lock" "$@" zsh ~/llm-stack/stack.sh general > "$TMP/out" 2>&1
+      LLM_STACK_LOCKDIR="$TMP/lock" VOICEBOX_PIDFILE="$TMP/sin-voz.pid" "$@" zsh ~/llm-stack/stack.sh general > "$TMP/out" 2>&1
   print $?
 }
 : > "$TMP/lms.log"; rc=$(_run_general)
