@@ -41,4 +41,9 @@ zsh ~/llm-stack/stack.sh voz-stop   # descarga modelos de voz y para los dos pro
   generadas en local; pendiente el veredicto al oído del operador (`pruebas/`).
 - RAM: ~1,8 GB el backend con Kokoro cargado; con el explorador residente quedaba un 42 % libre.
 - Circuito MCP → generación → altavoz verificado de extremo a extremo (~6 s la primera vez).
-- No probado aún: clonado (Qwen3-TTS) de la voz de Mía; Whisper; Chatterbox.
+- **Mía con Qwen3-TTS 1.7B (17/10): ganó a ciegas 5 de 6 → voz de Mía desde la siguiente serie (decisión del operador).** Prueba: misma referencia que VibeVoice
+  (`es-MiaBrec_woman.wav`, transcrita con el `mlx_whisper` local), guiones B1 v3 y B4 v2, semillas
+  101/303/404, solo paso-alto 85 Hz ×2. F0 173-194 Hz (dentro del registro de Mía); ritmo B1
+  2,81-2,95 pal/s frente a 2,46 de la aprobada. Escucha a ciegas en `pruebas/mia-qwen/a_ciegas/`
+  (clave en `clave_NO_ABRIR_hasta_votar.txt`). Los originales aprobados no se tocan.
+- No probado aún: Chatterbox; dictado local.
