@@ -865,3 +865,29 @@ Este parágrafo. Commits a continuación.
 | `BIBLIOTECA/skills/enrutador-ia/REGLAS_ENRUTAMIENTO.md` | sección cloud-agentic v5.6 |
 | `BIBLIOTECA/skills/skill-sistema-status/SKILL.md` | nueva skill creada |
 | `llm-stack/sistema-agentico.md` | §24 añadido |
+
+## 22. Un solo DeepSeek de trabajo: V4.1-Flash-1017 en todo el stack — 2026-10-18 (OK operador)
+
+DeepSeek publicó el 17/10 **V4.1-Flash-1017** (changelog oficial: DeepSWE 74,2→77,0 · Terminal-Bench 4.0
+31,2→42,3 · HLE 36,8→42,6, que iguala a V4-Pro · salidas más cortas; sin cifras de SimpleQA ni LongBench).
+**A/B en opencode headless** (`--dir`, `--auto`, sin subagentes, carpetas aisladas, `data_collection: deny`),
+tres tareas: arreglar 5 fallos, análisis de cobertura de `stack.sh` y una función de factura con IVA
+corregida con **8 tests ocultos** (validados: referencia 8/8, versión ingenua con float 1/8):
+
+| | V4.1-Flash 0910 | **V4.1-Flash-1017** | V4-Pro |
+|---|---|---|---|
+| Aciertos (incluye ocultos) | 4/4 | **4/4** | 3/3 |
+| Tiempo medio por ejecución | 22,8 s | 25,0 s | 71,3 s |
+| Coste del grupo (OpenRouter) | 0,0434 $ (4) | **0,0202 $ (4)** | 0,0295 $ (3) |
+| Salida total | 6,7k | 8,3k | 4,5k |
+
+**Veredicto:** 1017 gana por coste (la mitad que la 0910) sin perder nada en nuestras tareas, que no
+discriminan calidad: los tres aciertan todo. Velocidad igual a la 0910 y ~3× la de V4-Pro. La promesa de
+salidas más cortas NO se ve en opencode (+23 %). **Cambio aplicado (OK previo del operador):**
+`cloud-agentic`, `cloud-coder-value`, `cloud-megacontext` y `cloud-reasoning` (antes V3.2) → 1017; hermes
+(default + MoA, que va directo a OpenRouter sin LiteLLM), `dpsk`, enrutador (ruta de respaldo sin LiteLLM),
+AGENTS.md v6.4, SOUL.md, REGLAS, JERARQUIA, STACK_AND_TOOLS y el esquema HTML. **`cloud-pro-legacy`**
+(V4-Pro) queda sin cablear como vuelta atrás. `dpsk` ya es el mismo modelo que el primario: solo sirve para
+saltar desde una sesión local. Verificado de punta a punta: opencode, `dpsk` y hermes responden por 1017;
+crons de hermes a 0 antes y después del reinicio. **Riesgo abierto:** conocimiento factual y contexto muy
+largo, donde la 0910 perdía 13 y 6 puntos frente a V4-Pro y la 1017 no publica cifras.

@@ -144,7 +144,8 @@ model_list:
   # Mismo modelo que cloud-coder-value — alias semántico para "tarea de contexto gigante".
   - model_name: cloud-megacontext
     litellm_params:
-      model: openrouter/deepseek/deepseek-v4-pro   # $0.21/$0.42 por M · 1M ctx
+      # 2026-10-18 (OK operador): -> V4.1-Flash-1017 tras A/B en opencode (11/11 los 3 brazos; 1017 = mitad de coste que 0910, ~3x mas rapido que V4-Pro)
+      model: openrouter/deepseek/deepseek-v4.1-flash-1017   # $0.05-0.15/$0.24-0.60 por M · 1M ctx
       api_key: os.environ/OPENROUTER_API_KEY
       extra_body:
         provider:
@@ -163,7 +164,8 @@ model_list:
   # queda solo para lo mas duro. ~3.5x mas barato en output que GLM-5.3.
   - model_name: cloud-coder-value
     litellm_params:
-      model: openrouter/deepseek/deepseek-v4-pro   # $0.21/$0.42 por M · 1M ctx
+      # 2026-10-18 (OK operador): -> V4.1-Flash-1017 tras A/B en opencode (11/11 los 3 brazos; 1017 = mitad de coste que 0910, ~3x mas rapido que V4-Pro)
+      model: openrouter/deepseek/deepseek-v4.1-flash-1017   # $0.05-0.15/$0.24-0.60 por M · 1M ctx
       api_key: os.environ/OPENROUTER_API_KEY
       extra_body:
         provider:
@@ -176,7 +178,8 @@ model_list:
   # data_collection=deny: OpenRouter solo enruta a proveedores que no retienen ni entrenan con datos.
   - model_name: cloud-agentic
     litellm_params:
-      model: openrouter/deepseek/deepseek-v4.1-flash   # ~$0.02-0.05/$0.40-0.44 por M · 1M ctx
+      # 2026-10-18 (OK operador): -> V4.1-Flash-1017 tras A/B en opencode (11/11 los 3 brazos; 1017 = mitad de coste que 0910, ~3x mas rapido que V4-Pro)
+      model: openrouter/deepseek/deepseek-v4.1-flash-1017   # $0.05-0.15/$0.24-0.60 por M · 1M ctx
       api_key: os.environ/OPENROUTER_API_KEY
       extra_body:
         provider:
@@ -185,13 +188,24 @@ model_list:
   # Razonamiento / mates barato (hueco que faltaba). Tier pesado = cloud-megacontext (V4-Pro).
   - model_name: cloud-reasoning
     litellm_params:
-      model: openrouter/deepseek/deepseek-v3.2     # $0.269/$0.400 por M · 164k ctx
+      # 2026-10-18 (OK operador): -> V4.1-Flash-1017 tras A/B en opencode (11/11 los 3 brazos; 1017 = mitad de coste que 0910, ~3x mas rapido que V4-Pro)
+      model: openrouter/deepseek/deepseek-v4.1-flash-1017   # $0.05-0.15/$0.24-0.60 por M · 1M ctx
       api_key: os.environ/OPENROUTER_API_KEY
       extra_body:
         provider:
           data_collection: deny
 
   # Trigger: vídeo / docs visuales que local-general no resuelve
+  # 2026-10-18 RESERVA: V4-Pro, sin cablear en ningun frontend. Vuelta atras = apuntar aqui el alias que haga falta
+  # (conocimiento factual sin busqueda o contexto muy largo, donde V4.1-Flash perdia en el paper).
+  - model_name: cloud-pro-legacy
+    litellm_params:
+      model: openrouter/deepseek/deepseek-v4-pro   # $0.21/$0.42 por M · 1M ctx
+      api_key: os.environ/OPENROUTER_API_KEY
+      extra_body:
+        provider:
+          data_collection: deny
+
   - model_name: cloud-vision
     litellm_params:
       model: openrouter/minimax/minimax-m3     # $0.30/$1.20 por M · 1M ctx
