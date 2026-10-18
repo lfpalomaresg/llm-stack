@@ -5,7 +5,7 @@
 #
 # Perfiles (nunca 2 grandes a la vez — regla anti-cuelgue):
 #   agente  → SOLO explorador residente (FAST, 32k, sin TTL)  [default · opción b, 2026-09-15]
-#             @worker (R1-8B) y @nexn2 (Nex) entran JIT vía LiteLLM al invocarlos.
+#             @worker (MiMo-9B) y @nexn2 (Nex) entran JIT vía LiteLLM al invocarlos.
 #   general → Nex 32k (TTL 30 min) + explorador — lo pide enrutar.sh para local-general
 #   ligero  → solo explorador (descarga Nex)
 #   code    → retirado (redirige a agente)
@@ -33,7 +33,7 @@ LOCKDIR="${LLM_STACK_LOCKDIR:-/tmp/llm-stack.lock}"   # override solo para tests
 # agentic) sustituyó al Qwen3.6-35B. 2026-09-10: 35B y Coder-30B RETIRADOS y borrados del
 # disco (OK operador); local-coder es un alias a Nex. 2026-09-25: eliminada la variable CODER.
 GENERAL="nex-n2-mini-local"
-WORKER="deepseek/deepseek-r1-0528-qwen3-8b"   # workers ×N con razonamiento R1 (v5.4)
+WORKER="mimo-v2.6-distill-qwen-9b-optiq"   # 2026-10-19 (OK operador): MiMo-V2.6-Distill-Qwen-9B sustituye al R1-8B (bench 6/6 vs 3/6)
 # EXPLORADOR residente (@explorador · local-fast · bot de Telegram). 2026-09-15 (opción b, OK
 # operador): Qwen3.5-9B MLX 4-bit con chat_template NO-THINK por defecto (QWEN35-9B-NOTHINK.md).
 # Sustituye al R1-8B que hacía de "fast" desde el 08/09 (razona: mal encaje para un rol sin
@@ -313,7 +313,7 @@ case "$1" in
     _require_lms; _lock 60 || exit 4
     # 2026-09-15 — OPCIÓN B (OK operador). El orquestador es DeepSeek-V4-Pro (cloud): en RAM
     # fija solo queda el explorador (FAST, no-think @32k, SIN TTL — también lo usa el bot de
-    # Telegram). @worker (R1-8B) y @nexn2 (Nex) entran JIT vía LiteLLM y salen por TTL; LM Studio
+    # Telegram). @worker (MiMo-9B) y @nexn2 (Nex) entran JIT vía LiteLLM y salen por TTL; LM Studio
     # releva un JIT por otro (unloadPreviousJITModelOnLoad) → nunca coinciden los tres y Nex
     # siempre cabe. Antes: Nex@32k + R1@24k fijos (~25 GB) en cada arranque de opencode.
     # ⚠️ El JIT carga con el contexto por defecto de LM Studio: R1 fijado a 24k y Nex a 32k en su
@@ -326,7 +326,7 @@ case "$1" in
     # (status processing) no se toca: puede estar sirviendo a @nexn2 en otra sesión.
     [ "$(_estado_cargado "$GENERAL")" = "idle" ] && lms unload "$GENERAL" 2>/dev/null
     _cargar "$FAST" 32768 0 \
-      && echo "Perfil AGENTE activo (explorador residente 32k · @worker R1-8B y @nexn2 Nex bajo demanda)"
+      && echo "Perfil AGENTE activo (explorador residente 32k · @worker MiMo-9B y @nexn2 Nex bajo demanda)"
     ;;
   ligero)
     _require_lms; _lock 60 || exit 4

@@ -891,3 +891,14 @@ AGENTS.md v6.4, SOUL.md, REGLAS, JERARQUIA, STACK_AND_TOOLS y el esquema HTML. *
 saltar desde una sesión local. Verificado de punta a punta: opencode, `dpsk` y hermes responden por 1017;
 crons de hermes a 0 antes y después del reinicio. **Riesgo abierto:** conocimiento factual y contexto muy
 largo, donde la 0910 perdía 13 y 6 puntos frente a V4-Pro y la 1017 no publica cifras.
+
+## 23. `@worker`: MiMo-V2.6-Distill-Qwen-9B sustituye al R1-8B — 2026-10-19 (OK operador: "para R1")
+
+Detalle completo, cifras y re-aplicación en **`MIMO-WORKER.md`**. Resumen: razonar 8/8 vs 2/8 (30× más
+rápido), código 6/6 vs 3/6, y como subagente real en opencode resuelve las dos tareas (una con 8 tests ocultos)
+donde el R1 compactaba sin avanzar. Dos arreglos sin los que falla: **plantilla de Qwen3.5** (con la suya LM
+Studio no interpreta las herramientas → bucle de compactación sin herramientas) y **32k declarados también en
+opencode** (el `limit.context: 16384` heredado del R1 hacía compactar a cada paso; era también la causa de
+fondo de los bucles del R1). El explorador sigue en Qwen3.5-9B; en `opencode.json` se le declaró por fin su
+límite (32k/8k), que faltaba. Runtime MLX 1.13.1 (auto-instalado 10/10) ya respeta el contexto. R1-8B en
+disco sin alias (4,6 GB), pendiente de OK para borrar.

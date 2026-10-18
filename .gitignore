@@ -25,3 +25,4 @@ voicebox/venv/
 voicebox/data/
 voicebox/pruebas/
 voicebox/*.pid
+bench-mimo/*.log

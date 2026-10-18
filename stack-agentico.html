@@ -218,7 +218,7 @@
         <g font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--ink)">
           <text x="70" y="292">▸ local-general · Nex ★</text>
           <text x="70" y="313">▸ local-coder → Nex (alias)</text>
-          <text x="70" y="334">▸ local-worker · R1-8B ×4</text>
+          <text x="70" y="334">▸ local-worker · MiMo-9B ×4</text>
           <text x="70" y="355">▸ local-auditor · Gemma-4</text>
           <text x="70" y="376">▸ local-embed · 0.6B</text>
           <text x="70" y="397">▸ + 3 revisores careo (JIT)</text>
@@ -300,7 +300,7 @@
 
         <div class="m">
           <div class="m-top"><span class="m-alias">local-worker</span><span class="m-role">Workers ×4</span></div>
-          <div class="m-real">DeepSeek-R1-0528-Qwen3-8B</div>
+          <div class="m-real">MiMo-V2.6-Distill-Qwen-9B</div>
           <p class="m-fn">Ejecuta tareas acotadas que el orquestador delega; hasta 4 en paralelo sobre UNA carga. Razonamiento R1 → se atasca menos → menos escalados. Absorbe el trabajo mecánico del retirado 8B. temp 0.6.</p>
           <div class="chips"><span class="chip">denso · R1</span><span class="chip">8B</span><span class="chip">4,6 GB</span><span class="chip">16k ctx</span></div>
         </div>
@@ -436,7 +436,7 @@
         <tbody>
           <tr><td>Orquestador</td><td>local-general</td><td>Nex-N2-mini (35B-A3B) <span class="res">· antes 35B</span></td><td class="res">local</td></tr>
           <tr><td>Coder</td><td>local-coder (→ Nex) · dpsk</td><td>Nex para sensible acotado <span class="res">· V4.1-Flash-1017 (dpsk) para grande NO sensible</span></td><td class="res">local / cloud consciente</td></tr>
-          <tr><td>Workers ×4</td><td>local-worker</td><td>DeepSeek-R1-8B</td><td class="res">local</td></tr>
+          <tr><td>Workers ×4</td><td>local-worker</td><td>MiMo-V2.6-Distill-Qwen-9B</td><td class="res">local</td></tr>
           <tr><td>Revisores (careo)</td><td>local-reasoner · -reviewer-ms · -auditor</td><td>gpt-oss-20b · Phi-4 · Gemma-4</td><td class="res">local</td></tr>
           <tr><td>Red-team / brainstorm / revisión creativa</td><td>local-uncensored (@brainstorm)</td><td>Josiefied-30B abliterado · JIT, evicta Nex</td><td class="res">local</td></tr>
           <tr><td>Revisión externa</td><td>—</td><td>Codex · Gemini · Claude</td><td class="res">frontera USA</td></tr>

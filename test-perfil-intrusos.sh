@@ -17,7 +17,7 @@ models = json.load(open(st)) if os.path.exists(st) else []
 a = sys.argv[1:]
 open(log, "a").write(" ".join(a) + "\n")
 GB = 1024**3
-SIZES = {"nex-n2-mini-local": 20.42*GB, "deepseek/deepseek-r1-0528-qwen3-8b": 4.62*GB}
+SIZES = {"nex-n2-mini-local": 20.42*GB, "mimo-v2.6-distill-qwen-9b-optiq": 7.12*GB, "deepseek/deepseek-r1-0528-qwen3-8b": 4.62*GB}
 def save(): json.dump(models, open(st, "w"))
 if a[:2] == ["ps", "--json"]:
     print(json.dumps(models))
@@ -60,7 +60,7 @@ _check() {  # $1 descripción · $2 obtenido · $3 esperado
   else print "  ❌ $1 — esperado [$3], obtenido [$2]"; fallos=$((fallos + 1)); fi
 }
 
-print "0) Opción b: el explorador (FAST) es un modelo propio, no el R1-8B del worker"
+print "0) Opción b: el explorador (FAST) es un modelo propio, no el del worker"
 _check "FAST != WORKER" "$([[ "$FAST" != "$WORKER" ]] && print distinto || print igual)" "distinto"
 
 print "1) FORCE=1 con el 27B del bot + un embedding cargados"

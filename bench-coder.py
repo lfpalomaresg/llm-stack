@@ -6,7 +6,7 @@ import json, sys, time, re, subprocess, urllib.request, os
 ID, LABEL, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 API = "http://localhost:1234/v1/chat/completions"
 
-def call(prompt, maxtok=3000):
+def call(prompt, maxtok=int(os.environ.get("BENCH_MAXTOK", "3000"))):
     body = {"model": ID, "temperature": 0.2, "top_p": 0.8, "max_tokens": maxtok,
         "messages": [{"role": "user", "content": prompt}]}
     # 2026-10-01: campos extra por entorno (p.ej. BENCH_EXTRA_JSON='{"reasoning_effort":"none"}')
