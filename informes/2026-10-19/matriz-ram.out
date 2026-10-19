@@ -1,0 +1,12 @@
+inicio: libre 72% · swap 25224.38 MB
+AGENTE: explorador + worker|CABE|13.1 GB pesos|libre 45%|swap 28517.81 MB| ✓qwen3.5-9b-mlx ✓mimo-v2.6-distill-qwen-9b-optiq
+GENERAL: Nex solo|CABE|20.4 GB pesos|libre 46%|swap 34644.38 MB| ✓nex-n2-mini-local
+Nex + worker (@nexn2 y @worker)|CABE|27.5 GB pesos|libre 42%|swap 36451.31 MB| ✓nex-n2-mini-local ✓mimo-v2.6-distill-qwen-9b-optiq
+Nex + explorador|CABE|26.4 GB pesos|libre 42%|swap 35251.31 MB| ✓nex-n2-mini-local ✓qwen3.5-9b-mlx
+Careo capa 1: explorador + gpt-oss + Phi|CABE|26.3 GB pesos|libre 39%|swap 41538.12 MB| ✓qwen3.5-9b-mlx ✓gpt-oss-20b ✓phi-4-reasoning-plus-mlx
+Auditor sensible: explorador + Gemma|CABE|12.5 GB pesos|libre 56%|swap 25993.44 MB| ✓qwen3.5-9b-mlx ✓gemma-4-e4b-it-optiq
+Red team: explorador + Josie|CABE|23.2 GB pesos|libre 33%|swap 30738.44 MB| ✓qwen3.5-9b-mlx ✓josiefied-qwen3-30b-a3b-abliterated-v2
+Explorador + worker + gpt-oss|CABE|25.2 GB pesos|libre 33%|swap 32253.31 MB| ✓qwen3.5-9b-mlx ✓mimo-v2.6-distill-qwen-9b-optiq ✓gpt-oss-20b
+Perfil AGENTE activo (explorador residente 32k · @worker MiMo-9B y @nexn2 Nex bajo demanda)
+fin: [('qwen3.5-9b-mlx', 32768)] · libre 61%
+rc=0

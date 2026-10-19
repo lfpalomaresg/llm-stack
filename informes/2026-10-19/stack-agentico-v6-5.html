@@ -1,0 +1,263 @@
+<title>Stack Agéntico v6.5</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: informe técnico de una columna (sala de máquinas), tablas densas con scroll propio, chips de severidad */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#18212e; --soft:#566173; --line:#dde2ea;
+  --accent:#0f6f73; --accent-soft:#e3f1f1;
+  --crit:#b3261e; --crit-bg:#fbe9e7; --high:#b4530a; --high-bg:#fdf0e3; --med:#8a6d00; --med-bg:#fbf5dc;
+  --ok:#2e7d32; --ok-bg:#e7f4e8; --low:#5f6b7a; --low-bg:#eef1f5;
+  --f-display:"Archivo",system-ui,sans-serif; --f-body:"Source Sans 3",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161e; --surface:#171e28; --ink:#e4e9f0; --soft:#9aa6b6; --line:#2a3443;
+  --accent:#4fb8bb; --accent-soft:#16302f;
+  --crit:#ff8a80; --crit-bg:#3a1714; --high:#ffb36b; --high-bg:#3a2410; --med:#e8c95a; --med-bg:#332b0c;
+  --ok:#81c784; --ok-bg:#16301a; --low:#a7b2c0; --low-bg:#202a37; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161e; --surface:#171e28; --ink:#e4e9f0; --soft:#9aa6b6; --line:#2a3443;
+  --accent:#4fb8bb; --accent-soft:#16302f;
+  --crit:#ff8a80; --crit-bg:#3a1714; --high:#ffb36b; --high-bg:#3a2410; --med:#e8c95a; --med-bg:#332b0c;
+  --ok:#81c784; --ok-bg:#16301a; --low:#a7b2c0; --low-bg:#202a37; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding-block:32px 72px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:44px}
+header{display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(30px,5vw,44px);line-height:1.08;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:700;font-size:23px;margin:0;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:700;font-size:17px;margin:0}
+p{margin:0;max-width:68ch}
+.lede{font-size:18px;color:var(--soft);max-width:70ch}
+section{display:flex;flex-direction:column;gap:14px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--f-mono);font-size:12.5px;color:var(--soft)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.tile b{font-family:var(--f-display);font-size:28px;font-variant-numeric:tabular-nums;line-height:1}
+.tile span{font-size:13.5px;color:var(--soft)}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:640px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);font-weight:600;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td code,p code,li code{font-family:var(--f-mono);font-size:12.5px;background:var(--accent-soft);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip{display:inline-block;font-family:var(--f-mono);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.c-crit{color:var(--crit);background:var(--crit-bg)} .c-high{color:var(--high);background:var(--high-bg)}
+.c-med{color:var(--med);background:var(--med-bg)} .c-ok{color:var(--ok);background:var(--ok-bg)} .c-low{color:var(--low);background:var(--low-bg)}
+.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 6px 6px 0;max-width:none}
+ul,ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;max-width:72ch}
+.diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card .who{font-family:var(--f-mono);font-size:12px;color:var(--soft)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+pre.goal{white-space:pre-wrap;font-family:var(--f-mono);font-size:12.5px;line-height:1.5;margin:10px 0 0;color:var(--ink)}
+a{color:var(--accent)} a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+footer{font-size:13px;color:var(--soft);font-family:var(--f-mono)}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Auditoría del 19/10/2026 · Mac M4 Max 36 GB</div>
+  <h1>Stack agéntico v6.5</h1>
+  <p class="lede">Estado real del stack medido hoy: modelos, agentes, normas, memoria, automejora, cargas en RAM y seguridad. Cierra con el plan de mejoras y el laboratorio de proyectos con sus dos primeros pilotos.</p>
+  <div class="meta"><span>Fuentes: configuraciones, registros, suites de test y mediciones en vivo</span><span>4 auditorías paralelas de solo lectura</span><span>8 combinaciones de carga medidas</span></div>
+</header>
+
+<section>
+  <h2>Resumen</h2>
+  <div class="tiles">
+    <div class="tile"><b>1</b><span>riesgo crítico, <strong>ya cerrado</strong> hoy (bot de Telegram abierto)</span></div>
+    <div class="tile"><b>4</b><span>riesgos altos abiertos, con arreglo propuesto</span></div>
+    <div class="tile"><b>2</b><span>bucles agénticos este mes (11/10 y 17/10) pese al tope de pasos</span></div>
+    <div class="tile"><b>20</b><span>contradicciones entre normas y realidad</span></div>
+    <div class="tile"><b>21,69 $</b><span>gasto cloud en octubre (OpenRouter)</span></div>
+  </div>
+  <p class="note">El stack funciona y está bien armado en lo técnico: alias canónicos, frontera de datos, tripwires y benchmarks propios. Sus puntos débiles están en los bordes: lo que escucha en la red, los caminos a la nube que se saltan el filtro, normas que se quedaron atrás tras cuatro cambios de modelo en un mes, y una automejora que produce informes que nadie convierte en cambios.</p>
+</section>
+
+<section>
+  <h2>Seguridad</h2>
+  <div class="tbl"><table>
+    <tr><th>Riesgo</th><th>Hallazgo</th><th>Arreglo</th></tr>
+    <tr><td><span class="chip c-ok">cerrado hoy</span></td><td>El bot de Telegram de hermes respondía a <strong>cualquier usuario</strong> (<code>GATEWAY_ALLOW_ALL_USERS=true</code>), con terminal local y acceso a correo, GitHub y Supabase.</td><td>Hecho: solo tu usuario. Backup <code>.env.bak.20261019-lockdown</code>. Pasarela reconectada.</td></tr>
+    <tr><td><span class="chip c-high">alto</span></td><td>LiteLLM escucha en <strong>todas las interfaces</strong> (<code>*:4000</code>) y sin clave: cualquiera en tu red local puede usar los alias de pago y los modelos locales.</td><td><code>--host 127.0.0.1</code> en <code>stack.sh</code> y <code>master_key</code>. Antes, comprobar que OmniRoute (Docker) no lo necesita.</td></tr>
+    <tr><td><span class="chip c-high">alto</span></td><td>El token del bot de Telegram pendiente de revocar desde septiembre sigue en uso, en <code>.env</code> y en el estado del gateway.</td><td>Revocar en @BotFather y poner el nuevo en <code>~/.hermes/.env</code>. Solo puedes hacerlo tú.</td></tr>
+    <tr><td><span class="chip c-high">alto</span></td><td>Los subagentes locales bloquean 9 MCP pero no <code>local-models</code>, cuyo <code>ask_openrouter_model</code> va directo a OpenRouter <strong>sin filtro de privacidad</strong>.</td><td>Añadir <code>"local-models_*": deny</code> a los tres agentes locales y meter el filtro en el servidor MCP.</td></tr>
+    <tr><td><span class="chip c-high">alto</span></td><td>Claude Code tiene <code>Bash(*)</code> permitido, y <code>settings.local.json</code> (legible por todos) guarda un Bearer en claro.</td><td>Quitar la regla con el token, <code>chmod 600</code> y rotarlo si es real. Revisar <code>Bash(*)</code>.</td></tr>
+    <tr><td><span class="chip c-med">medio</span></td><td>Caminos a la nube que esquivan LiteLLM: MoA de hermes, proveedor Ollama <code>minimax-m3:cloud</code> en hermes, proveedor <code>openrouter</code> en opencode y la ruta de respaldo de <code>enrutar.sh</code>.</td><td>Quitar los proveedores directos o añadirles el filtro; etiquetar <code>*-free</code> como "nunca sensible".</td></tr>
+    <tr><td><span class="chip c-med">medio</span></td><td>El primario de opencode (nube) hereda todos los MCP: iMessage, correo, Supabase y GitHub. Lo que lean esas herramientas sale a la nube.</td><td>Denegar iMessage, m365 y Supabase en los agentes cloud; <code>permission</code> global con <code>bash: ask</code>.</td></tr>
+    <tr><td><span class="chip c-med">medio</span></td><td>El mantenimiento nocturno lanza <code>claude -p --dangerously-skip-permissions</code> sin nadie delante.</td><td>Sustituirlo por una lista de herramientas permitidas.</td></tr>
+    <tr><td><span class="chip c-low">bajo</span></td><td>Seis <code>.env</code> de proyectos con permisos 644 (ninguno en git).</td><td><code>chmod 600</code>.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Modelos y tareas</h2>
+  <p>Un solo endpoint (LiteLLM, 20 alias) da servicio a todas las puertas. Todos los alias cloud llevan <code>data_collection: deny</code>.</p>
+  <div class="tbl"><table>
+    <tr><th>Rol</th><th>Alias</th><th>Modelo</th><th>Dónde</th><th>Tarea</th></tr>
+    <tr><td>Orquestador</td><td><code>cloud-agentic</code></td><td>DeepSeek V4.1-Flash-1017</td><td>Nube</td><td>Primario de opencode: planifica, delega, programa. 1M de contexto.</td></tr>
+    <tr><td>Orquestador hermes</td><td><code>cloud-coder-value</code></td><td>V4.1-Flash-1017</td><td>Nube</td><td>Conversación en hermes y salto <code>dpsk</code> desde una sesión local.</td></tr>
+    <tr><td>Documentos largos</td><td><code>cloud-megacontext</code></td><td>V4.1-Flash-1017</td><td>Nube</td><td>Repo entero y registros. Techo: <code>cloud-megacontext-max</code> (Kimi K3).</td></tr>
+    <tr><td>Reserva</td><td><code>cloud-pro-legacy</code></td><td>DeepSeek V4-Pro</td><td>Nube</td><td>Sin cablear. Conocimiento factual y contexto muy largo si Flash flojea.</td></tr>
+    <tr><td>Código duro</td><td><code>cloud-coder</code></td><td>GLM-5.3</td><td>Nube</td><td><code>@escalador</code>: solo tras 3 fallos objetivos.</td></tr>
+    <tr><td>Visión</td><td><code>cloud-vision</code></td><td>MiniMax-M3</td><td>Nube</td><td>Vídeo y documentos visuales no sensibles.</td></tr>
+    <tr><td>Explorador</td><td><code>local-fast</code></td><td>Qwen3.5-9B sin razonar</td><td>Mac, residente</td><td>Mecánico: buscar, resumir, clasificar. También el bot de Telegram.</td></tr>
+    <tr><td>Worker</td><td><code>local-worker</code></td><td>MiMo-9B (plantilla Qwen3.5)</td><td>Mac, bajo demanda</td><td>Razonar acotado y material sensible. 32k. Razona por escrito.</td></tr>
+    <tr><td>Grande local</td><td><code>local-general</code></td><td>Nex-N2-mini 35B-A3B</td><td>Mac, bajo demanda</td><td><code>@nexn2</code>: ejecución local sensible, visión local.</td></tr>
+    <tr><td>Revisores</td><td><code>local-reasoner</code> · <code>local-reviewer-ms</code></td><td>gpt-oss-20b · Phi-4</td><td>Mac</td><td>Careo capa 1, sin salir del Mac.</td></tr>
+    <tr><td>Auditor sensible</td><td><code>local-auditor</code></td><td>Gemma-4 E4B</td><td>Mac</td><td>Revisión de material sensible por <code>enrutar.sh</code>.</td></tr>
+    <tr><td>Red team</td><td><code>local-uncensored</code></td><td>Josiefied-30B</td><td>Mac</td><td>Solo cuando lo pides tú.</td></tr>
+    <tr><td>Gratis</td><td><code>gpt-oss-free</code> · <code>auditor-free</code></td><td>gpt-oss-120B</td><td>Nube (Antigravity)</td><td>Razonar y revisar lo no sensible a 0 €.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Flujo de trabajo</h2>
+  <div class="diagram"><pre class="mermaid">
+flowchart LR
+  OP([Operador]) --> CC[Claude Code CLI<br/>orquestador formal]
+  OP --> OC[opencode<br/>primario V4.1-Flash]
+  OP --> HM[hermes<br/>+ bot Telegram]
+  OP --> CX[Codex<br/>careo capa 2]
+  CC -->|enrutar.sh · SENSIBLE=1| LL
+  CC -->|careo-local.py| LL
+  OC --> LL
+  HM --> LL
+  OC -.->|subagentes, 1 ronda, 40 pasos, sin MCP| SUB[@explorador · @worker · @nexn2]
+  SUB --> LL
+  LL{{LiteLLM :4000<br/>20 alias}} --> LOC[(LM Studio :1234<br/>explorador residente<br/>worker, Nex, revisores JIT)]
+  LL -->|data_collection deny| OR[(OpenRouter<br/>DeepSeek, GLM, Kimi, MiniMax)]
+  LL --> AGY[(Antigravity<br/>gpt-oss-120B gratis)]
+  LAB[proyectos-lab<br/>lab-run.py vigilado] -->|opencode --agent lab| OC
+  </pre></div>
+  <p><strong>Ley de frontera:</strong> lo sensible (Soho, clientes, personal) solo se procesa en la caja del Mac. La nube orquesta y no ingiere. El salto a la nube nunca es automático.</p>
+</section>
+
+<section>
+  <h2>Cargas en RAM, medidas hoy</h2>
+  <div class="tbl"><table>
+    <tr><th>Combinación</th><th>Pesos</th><th>Admitida</th><th>RAM libre</th></tr>
+    <tr><td>Perfil AGENTE: explorador + worker</td><td class="num">13,1 GB</td><td><span class="chip c-ok">cabe</span></td><td class="num">45 %</td></tr>
+    <tr><td>Perfil GENERAL: Nex solo</td><td class="num">20,4 GB</td><td><span class="chip c-ok">cabe</span></td><td class="num">46 %</td></tr>
+    <tr><td>Nex + worker</td><td class="num">27,5 GB</td><td><span class="chip c-ok">cabe</span></td><td class="num">42 %</td></tr>
+    <tr><td>Nex + explorador</td><td class="num">26,4 GB</td><td><span class="chip c-ok">cabe</span></td><td class="num">42 %</td></tr>
+    <tr><td>Careo capa 1: explorador + gpt-oss + Phi</td><td class="num">26,3 GB</td><td><span class="chip c-ok">cabe</span></td><td class="num">39 %</td></tr>
+    <tr><td>Auditor sensible: explorador + Gemma</td><td class="num">12,5 GB</td><td><span class="chip c-ok">cabe</span></td><td class="num">56 %</td></tr>
+    <tr><td>Red team: explorador + Josie</td><td class="num">23,2 GB</td><td><span class="chip c-ok">cabe</span></td><td class="num">33 %</td></tr>
+    <tr><td>Explorador + worker + gpt-oss</td><td class="num">25,2 GB</td><td><span class="chip c-ok">cabe</span></td><td class="num">33 %</td></tr>
+  </table></div>
+  <p class="note"><strong>Cambio respecto al 16/09:</strong> Nex y el explorador ya caben juntos. Entonces el guardarraíl lo rechazaba, y esa limitación sostiene el perfil <code>general</code> y la regla de que <code>@nexn2</code> no convive con el explorador. Pero el swap de partida era de 25 GB tras siete días encendido y llegó a 41 GB en el careo. Conviene reiniciar, volver a medir y, si se confirma, simplificar los perfiles.</p>
+  <p><strong>Fuera del guardarraíl:</strong> la app de selección de personal carga su propio modelo MLX (Qwen2.5-3B) dentro de su proceso, y Ollama corre en segundo plano. LM Studio no ve ninguno de los dos al decidir si un modelo cabe.</p>
+</section>
+
+<section>
+  <h2>Agentes</h2>
+  <div class="tbl"><table>
+    <tr><th>Agente</th><th>Modelo</th><th>Tope de pasos</th><th>MCP bloqueados</th><th>Estado</th></tr>
+    <tr><td><code>@explorador</code></td><td>local-fast</td><td class="num">40</td><td class="num">9 de 11</td><td><span class="chip c-med">falta local-models</span></td></tr>
+    <tr><td><code>@worker</code></td><td>local-worker (MiMo)</td><td class="num">40</td><td class="num">9 de 11</td><td><span class="chip c-med">falta local-models</span></td></tr>
+    <tr><td><code>@nexn2</code></td><td>local-general (Nex)</td><td class="num">40</td><td class="num">9 de 11</td><td><span class="chip c-med">falta local-models</span></td></tr>
+    <tr><td><code>@josiefied</code></td><td>local-uncensored</td><td>ninguno</td><td>ninguno</td><td><span class="chip c-high">sin protecciones</span></td></tr>
+    <tr><td><code>@revisor</code> · <code>@escalador</code> · <code>dpsk</code></td><td>nube</td><td>ninguno</td><td>ninguno</td><td><span class="chip c-med">heredan todos los MCP</span></td></tr>
+    <tr><td><code>lab</code> (nuevo)</td><td>cloud-agentic</td><td class="num">120</td><td class="num">11 de 11</td><td><span class="chip c-ok">encerrado en su carpeta</span></td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Bucles: el agujero que queda</h2>
+  <p>Este mes hubo dos bucles más del <code>@worker</code>, ambos con el R1 y ambos por falta de contexto: el 11/10 (60 errores en 37 min) y el 17/10, un careo local de un diff del bot de SBH que acumuló <strong>916 errores en 21 horas</strong>. El tope de 40 pasos no los frenó, porque <strong>los reintentos por error no cuentan como pasos</strong>.</p>
+  <p>La causa de fondo ya está arreglada: el límite de contexto declarado en opencode era de 16k, y hoy son 32k reales y declarados, con MiMo verificado como subagente. Falta la red de seguridad: un vigilante externo que mate cualquier sesión con errores repetidos. <code>lab-run.py</code> ya lo hace para el laboratorio; falta generalizarlo a todo opencode.</p>
+</section>
+
+<section>
+  <h2>Normas y memoria</h2>
+  <div class="grid2">
+    <div class="card"><h3>Normas</h3><p>20 contradicciones con la realidad. Las graves:</p><ul>
+      <li><code>AGENTS.md</code> permite enviar lo sensible a la nube "si el operador lo autoriza". La ley dice nunca.</li>
+      <li>JERARQUIA y el esquema HTML aún dicen que opencode arranca en local con Nex.</li>
+      <li>SOUL.md pone Antigravity en el "plano local". Es nube.</li>
+      <li><code>enrutar.sh</code> no sabe despachar <code>cloud-agentic</code>, aunque varias normas lo recomiendan.</li>
+      <li>AGENTS.md habla de un <code>@brainstorm</code> que no existe; el real es <code>@josiefied</code>.</li>
+      <li>El umbral de escalado varía entre documentos: 2, 2-3 o 3 fallos.</li>
+    </ul></div>
+    <div class="card"><h3>Memoria</h3><ul>
+      <li>La memoria de hermes (<code>USER.md</code>, <code>MEMORY.md</code>) describe el stack de agosto: 35B, Coder-30B, GLM-5.2. Hermes la carga en cada sesión.</li>
+      <li>El índice de la memoria de Claude ocupa 25,1 KB, en el límite de carga. Una sola línea del stack ocupa 2.500 caracteres.</li>
+      <li>La ficha del stack (40 KB) acumula 15 capas de crónica sin un estado actual arriba.</li>
+      <li>La lección de los bucles está repetida en tres sitios.</li>
+      <li>El fallback de la app de selección depende de un Qwen3-8B en la caché de Hugging Face que la memoria da por borrado.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>Automejora</h2>
+  <p>Casi todo se ejecuta y casi nada cambia. Los mecanismos producen informes y propuestas que se acumulan sin una decisión.</p>
+  <div class="tbl"><table>
+    <tr><th>Mecanismo</th><th>Última ejecución</th><th>¿Cambia algo?</th><th>Estado</th></tr>
+    <tr><td>Ciclo diario de automejora (Cowork)</td><td class="num">19/10</td><td>Solo documentos; 0 decisiones desde el 16/09</td><td><span class="chip c-high">roto: se ejecuta dos veces</span></td></tr>
+    <tr><td>Ciclo semanal del enrutador</td><td class="num">12/10</td><td>No, por diseño</td><td><span class="chip c-med">se saltó el 18/10</span></td></tr>
+    <tr><td>Registro del enrutador</td><td class="num">04/10</td><td>9 veredictos de 286</td><td><span class="chip c-high">muerto: el tráfico ya no pasa por él</span></td></tr>
+    <tr><td>Sinapsis (instintos)</td><td class="num">hoy</td><td>410 propuestas pendientes, 0 promovidas</td><td><span class="chip c-med">captura, no consolida</span></td></tr>
+    <tr><td>Mantenimiento quincenal</td><td class="num">11/10</td><td>Aplica parte</td><td><span class="chip c-ok">vivo</span></td></tr>
+    <tr><td>Vigilante de crons de hermes y del saldo</td><td class="num">hoy</td><td>Avisan</td><td><span class="chip c-ok">vivos</span></td></tr>
+  </table></div>
+  <p><strong>Lo que el sistema no aprende:</strong> resultados de benchmarks, gasto por modelo, incidentes de bucles y calidad de las delegaciones. Hoy todo eso vive en notas sueltas. El laboratorio, con <code>bench-continuo</code>, es la vía para darle datos estructurados.</p>
+</section>
+
+<section>
+  <h2>Plan de mejoras</h2>
+  <div class="tbl"><table>
+    <tr><th>Prioridad</th><th>Mejora</th><th>Esfuerzo</th><th>Quién</th></tr>
+    <tr><td><span class="chip c-crit">hoy</span></td><td>Revocar y rotar el token del bot de Telegram</td><td>5 min</td><td>Tú</td></tr>
+    <tr><td><span class="chip c-crit">hoy</span></td><td>LiteLLM solo en 127.0.0.1 y con clave, tras comprobar OmniRoute</td><td>20 min</td><td>Claude</td></tr>
+    <tr><td><span class="chip c-crit">hoy</span></td><td>Bloquear <code>local-models</code> en los subagentes locales y quitar el Bearer de <code>settings.local.json</code></td><td>15 min</td><td>Claude</td></tr>
+    <tr><td><span class="chip c-high">semana</span></td><td>Vigilante externo de opencode: corta sesiones con errores o compactaciones repetidos</td><td>1 h</td><td>Claude</td></tr>
+    <tr><td><span class="chip c-high">semana</span></td><td>Reescribir normas y memorias con el estado del 19/10: una sola fuente de verdad y las demás apuntando a ella</td><td>2 h</td><td>Claude + tu OK</td></tr>
+    <tr><td><span class="chip c-high">semana</span></td><td>Protecciones a <code>@josiefied</code> y bloqueo de MCP sensibles en los agentes cloud</td><td>20 min</td><td>Claude</td></tr>
+    <tr><td><span class="chip c-high">semana</span></td><td>Arreglar la doble ejecución del ciclo diario y conectar el registro del enrutador a los datos de LiteLLM</td><td>1 h</td><td>Claude</td></tr>
+    <tr><td><span class="chip c-med">mes</span></td><td>Reiniciar, volver a medir Nex + explorador y simplificar perfiles si se confirma</td><td>30 min</td><td>Claude</td></tr>
+    <tr><td><span class="chip c-med">mes</span></td><td>Sesión de decisión: pila de mejoras (9) y propuestas de Sinapsis (410)</td><td>1 h</td><td>Tú + Claude</td></tr>
+    <tr><td><span class="chip c-med">mes</span></td><td>Partir las fichas de memoria de más de 25 KB y podar el índice</td><td>1 h</td><td>Claude</td></tr>
+  </table></div>
+</section>
+
+<section id="laboratorio">
+  <h2>Laboratorio de proyectos</h2>
+  <p>Repo privado <a href="https://github.com/lfpalomaresg/proyectos-lab">proyectos-lab</a>. No abre carriles de negocio nuevos: fabrica piezas para los que ya están activos. Solo datos ficticios, una rama por experimento, tope de 0,50 $ por ejecución y 5 $ al mes, y un ejecutor que vigila desde fuera gasto, errores, compactaciones y tiempo.</p>
+  <div class="tbl"><table>
+    <tr><th>Proyecto</th><th>Para qué carril</th><th>Reparto de modelos</th><th>Estado</th></tr>
+    <tr><td>Biblioteca de KPIs hoteleros</td><td>Consultoría, Audit, SBH Hub</td><td>V4.1-Flash diseña y programa · MiMo propone casos borde · Qwen hace lo mecánico</td><td><span class="chip c-ok">piloto superado</span></td></tr>
+    <tr><td>Clasificador de averías</td><td>Relevo</td><td>V4.1-Flash programa · Qwen local clasifica · MiMo analiza los errores</td><td><span class="chip c-med">superado con reserva</span></td></tr>
+    <tr><td>Kit de datos sintéticos</td><td>APPCC, Supply, Relevo</td><td>V4.1-Flash genera · MiMo aporta casos raros · Qwen valida</td><td><span class="chip c-low">catálogo</span></td></tr>
+    <tr><td>Banco de extracción de facturas</td><td>Supply</td><td>V4.1-Flash genera · Nex extrae en local · MiniMax de referencia</td><td><span class="chip c-low">catálogo</span></td></tr>
+    <tr><td>Benchmark continuo del stack</td><td>Automejora</td><td>Bancos propios · V4.1-Flash informa</td><td><span class="chip c-low">catálogo</span></td></tr>
+  </table></div>
+  <h3>Resultado de los dos pilotos desatendidos</h3>
+  <div class="tbl"><table>
+    <tr><th>Piloto</th><th>Tiempo</th><th>Gasto</th><th>Errores</th><th>Verificación</th><th>Lectura</th></tr>
+    <tr><td>KPIs hoteleros</td><td class="num">5,7 min</td><td class="num">0,04 $</td><td class="num">0</td><td><span class="chip c-ok">propios + ocultos</span></td><td>11 funciones y 50 tests. Delegó una ronda en MiMo para los casos borde, como pedía el reparto.</td></tr>
+    <tr><td>Clasificador de averías</td><td class="num">9,4 min</td><td class="num">0,03 $</td><td class="num">0</td><td><span class="chip c-med">97,5 % limpio</span></td><td>Clasificó 100 % en local. Subió al 100 % ajustando el prompt al error del test: sobreajuste, que el propio agente avisó.</td></tr>
+  </table></div>
+  <div class="grid2">
+    <div class="card"><h3>Lo que funciona</h3><ul>
+      <li>Un GOAL con la API exacta, el reparto por modelo y "una ronda al worker" se cumple al pie de la letra.</li>
+      <li>El agente encerrado no salió de su carpeta ni usó la nube para clasificar.</li>
+      <li>Coste y tiempo predecibles: unos céntimos y menos de diez minutos por experimento.</li>
+    </ul></div>
+    <div class="card"><h3>Lo que el laboratorio ya aprendió</h3><ul>
+      <li>Si el agente ve el conjunto de test, ajusta contra él. La verificación tiene que usar un conjunto oculto de otro autor.</li>
+      <li>Los datos sintéticos que genera el propio agente pueden ser demasiado fáciles para medir de verdad.</li>
+      <li>Las dos lecciones están en <code>REGLAS.md</code>, que se inyecta en cada GOAL siguiente.</li>
+    </ul></div>
+  </div>
+  <h3>Recomendación sobre la tarea semanal</h3>
+  <p><strong>Sí, con dos condiciones previas.</strong> Los pilotos demuestran que el formato funciona: terminan solos, cuestan céntimos, respetan los límites y dejan algo verificable. Antes de automatizarlo haría dos cosas. Primero, que cada proyecto tenga su banco de evaluación oculto, escrito por otro modelo o por ti, para que el éxito sea real. Segundo, cerrar los riesgos de seguridad "hoy" de este informe, porque una tarea desatendida semanal amplía la superficie. Con eso, la tarea semanal ejecutaría <code>bench-continuo</code> y un proyecto del catálogo por turno, y dejaría un resumen corto con lo que aprendió.</p>
+</section>
+
+<footer>Informe generado por Claude Code el 19/10/2026 · fuente en ~/llm-stack/informes/2026-10-19/ · registro canónico del stack: ~/llm-stack/sistema-agentico.md</footer>
+</div>

@@ -1,0 +1,107 @@
+== VERSIONES
+LM Studio 0.4.25+1 · última cask: → 0.4.26,4
+runtime MLX: mlx-llm-mac-arm64-apple-metal-advsimd@1.13.1
+opencode 1.18.35 · última 1.19.3
+litellm 1.94.1
+Hermes Agent v0.19.1 (2026.7.30) · upstream c6f87deb · local 40e0e7ad (+187 carried commits)
+codex codex-cli 0.153.0
+claude 2.1.303 (Claude Code)
+
+== ALIAS LiteLLM
+local-coder            openai/nex-n2-mini-local                                deny=- temp=-
+local-general          openai/nex-n2-mini-local                                deny=- temp=-
+local-fast             openai/qwen3.5-9b-mlx                                   deny=- temp=-
+local-embed            openai/text-embedding-qwen3-embedding-0.6b              deny=- temp=-
+local-worker           openai/mimo-v2.6-distill-qwen-9b-optiq                  deny=- temp=0.6
+local-auditor          openai/gemma-4-e4b-it-optiq                             deny=- temp=-
+local-reasoner         openai/openai/gpt-oss-20b                               deny=- temp=-
+local-reviewer-ms      openai/phi-4-reasoning-plus-mlx                         deny=- temp=-
+local-uncensored       openai/josiefied-qwen3-30b-a3b-abliterated-v2           deny=- temp=-
+gpt-oss-free           openai/gpt-oss-free                                     deny=- temp=-
+auditor-free           openai/auditor-free                                     deny=- temp=-
+cloud-coder            openrouter/z-ai/glm-5.3                                 deny=deny temp=-
+cloud-coder-flash      openrouter/z-ai/glm-5.3-flash                           deny=deny temp=-
+cloud-megacontext      openrouter/deepseek/deepseek-v4.1-flash-1017            deny=deny temp=-
+cloud-megacontext-max  openrouter/moonshotai/kimi-k3                           deny=deny temp=-
+cloud-coder-value      openrouter/deepseek/deepseek-v4.1-flash-1017            deny=deny temp=-
+cloud-agentic          openrouter/deepseek/deepseek-v4.1-flash-1017            deny=deny temp=-
+cloud-reasoning        openrouter/deepseek/deepseek-v4.1-flash-1017            deny=deny temp=-
+cloud-pro-legacy       openrouter/deepseek/deepseek-v4-pro                     deny=deny temp=-
+cloud-vision           openrouter/minimax/minimax-m3                           deny=deny temp=-
+litellm_settings: {'drop_params': True, 'num_retries': 1, 'request_timeout': 600}
+general_settings: None
+
+== MODELOS EN DISCO
+mimo-v2.6-distill-qwen-9b-optiq                 7.1 GB safetensors qwen3_5
+qwen3.5-9b-mlx                                  6.0 GB safetensors qwen3_5
+nex-n2-mini-local                              20.4 GB safetensors qwen3_5_moe
+josiefied-qwen3-30b-a3b-abliterated-v2         17.2 GB safetensors qwen3_moe
+openai/gpt-oss-20b                             12.1 GB safetensors gpt_oss
+phi-4-reasoning-plus-mlx                        8.3 GB safetensors phi3
+gemma-4-e4b-it-optiq                            6.6 GB safetensors gemma4
+text-embedding-qwen3-embedding-0.6b             0.6 GB gguf qwen3
+text-embedding-nomic-embed-text-v1.5            0.1 GB gguf nomic-bert
+
+== AGENTES opencode
+dpsk: llm-stack/cloud-coder-value · primary · steps= · deny=0
+escalador: llm-stack/cloud-coder · subagent · steps= · deny=0
+explorador: llm-stack/local-fast · subagent · steps=40 · deny=9
+josiefied: llm-stack/local-uncensored · subagent · steps= · deny=0
+nexn2: llm-stack/local-general · subagent · steps=40 · deny=9
+revisor: llm-stack/auditor-free · subagent · steps= · deny=0
+worker: llm-stack/local-worker · subagent · steps=40 · deny=9
+primario: llm-stack/cloud-agentic · compaction: {'auto': True, 'prune': True} · permission global: None · mcp: {'m365-personal-suite': True, 'fetch': False, 'brave-search': True, 'github': True, 'supabase': True, 'claude_workspace': True, 'apify': True, 'imessage': True, 'context7': True, 'playwright': True, 'local-models': True}
+
+== LaunchAgents propios
+ai.hermes.gateway · pid=36129 exit=1
+com.bjango.istatmenus-setapp.agent · pid=1346 exit=0
+com.bjango.istatmenus-setapp.status · pid=1316 exit=0
+com.epicgames.launcher · NO CARGADO
+com.google.GoogleUpdater.wake · NO CARGADO
+com.google.keystone.agent · NO CARGADO
+com.google.keystone.xpcservice · NO CARGADO
+com.luisfran.agy-bridge · pid=1340 exit=0
+com.luisfran.enrutador-aprende · pid=- exit=0
+com.luisfran.hermes-cron-guard · pid=- exit=0
+com.luisfran.llm-stack · pid=73103 exit=-15
+com.luisfran.m365-telegram-bot · pid=1348 exit=0
+com.luisfran.openrouter-saldo · pid=- exit=0
+com.luisfran.seleccion-personal-retention · pid=- exit=0
+com.luisfran.seleccion-personal · pid=1317 exit=0
+com.luisfran.supabase-keepalive · pid=- exit=0
+com.luispalomares.health-nocturno · pid=- exit=0
+com.luispalomares.iamasters-respaldo · pid=- exit=0
+com.microsoft.OneDriveMigrationLauncher · pid=- exit=78
+com.setapp.DesktopClient.SetappAgent · pid=81075 exit=0
+com.setapp.DesktopClient.SetappAssistant · pid=- exit=0
+com.setapp.DesktopClient.SetappLauncher · pid=81082 exit=0
+com.setapp.DesktopClient.SetappUpdater · pid=- exit=1
+com.valvesoftware.steamclean · NO CARGADO
+
+== opencode: actividad 14 días
+2026-10-06: sesiones   3 · compactaciones    0 · errores stream    0
+2026-10-10: sesiones   4 · compactaciones    0 · errores stream    0
+2026-10-11: sesiones   4 · compactaciones   62 · errores stream   61
+2026-10-12: sesiones   3 · compactaciones    0 · errores stream    0
+2026-10-14: sesiones   9 · compactaciones    0 · errores stream    0
+2026-10-15: sesiones   5 · compactaciones    0 · errores stream    0
+2026-10-16: sesiones   6 · compactaciones    0 · errores stream    0
+2026-10-17: sesiones   9 · compactaciones  918 · errores stream  928
+2026-10-18: sesiones  31 · compactaciones   52 · errores stream    0
+2026-10-19: sesiones   2 · compactaciones    0 · errores stream    0
+peticiones por alias: {'cloud-agentic': 4459, 'local-worker': 2126, 'cloud-flash-1017': 31, 'cloud-coder-value': 22, 'auditor-free': 12, 'local-worker-mimo': 1}
+
+== OpenRouter gasto
+{'usage': 223.24, 'usage_daily': 0.04, 'usage_weekly': 0.04, 'usage_monthly': 21.69} limit None
+
+== hermes
+No scheduled jobs.
+Create one with 'hermes cron create ...' or the /cron command in chat.
+  default: cloud-coder-value
+    default_model: minimax-m3:cloud
+    default_model: cloud-coder-value
+
+== disco/RAM
+/dev/disk3s1s1   926Gi    13Gi   170Gi     7%    484k  1.8G    0%   /
+36 GB RAM
+22:37  up 7 days,  4:38, 3 users, load averages: 6.89 5.60 4.92

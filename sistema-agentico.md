@@ -902,3 +902,18 @@ opencode** (el `limit.context: 16384` heredado del R1 hacía compactar a cada pa
 fondo de los bucles del R1). El explorador sigue en Qwen3.5-9B; en `opencode.json` se le declaró por fin su
 límite (32k/8k), que faltaba. Runtime MLX 1.13.1 (auto-instalado 10/10) ya respeta el contexto. R1-8B
 BORRADO del disco el 19/10 con OK del operador.
+
+## 24. Auditoría v6.5 + laboratorio de proyectos — 2026-10-19 (OK operador)
+
+Informe completo: `informes/2026-10-19/stack-agentico-v6-5.html` (publicado como página privada). Cuatro
+auditorías paralelas de solo lectura (normas, memoria, automejora, seguridad) + inventario + matriz de RAM medida
+(`informes/2026-10-19/matriz-ram.*`). **Cerrado en el acto:** el bot de Telegram de hermes aceptaba a cualquier
+usuario (`GATEWAY_ALLOW_ALL_USERS=true`) con terminal local y MCP de correo → solo el operador. **Altos abiertos:**
+LiteLLM en `*:4000` sin clave; token de Telegram sin rotar; MCP `local-models` sin bloquear en subagentes locales
+(va a OpenRouter sin filtro); `Bash(*)` y un Bearer en `~/.claude/settings.local.json`. **Bucles:** 11/10 y 17/10
+(@worker R1, 916 errores en 21 h): los reintentos por error NO cuentan como pasos → hace falta vigilante externo.
+**RAM:** Nex + explorador ya caben (no el 16/09); swap de partida 25 GB → re-medir tras reiniciar.
+**Laboratorio:** repo privado `proyectos-lab` (agente `lab` encerrado, `lab-run.py` vigila gasto/errores/tiempo,
+0,50 $/ejecución y 5 $/mes). Pilotos: KPIs hoteleros ✅ (5,7 min, 0,04 $, ocultos en verde) y clasificador de
+averías ✅ con reserva (97,5 % limpio, 100 % sobreajustado al test). Tarea semanal: recomendada tras banco oculto
+por proyecto y cierre de los riesgos altos.
