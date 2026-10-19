@@ -900,5 +900,5 @@ donde el R1 compactaba sin avanzar. Dos arreglos sin los que falla: **plantilla 
 Studio no interpreta las herramientas → bucle de compactación sin herramientas) y **32k declarados también en
 opencode** (el `limit.context: 16384` heredado del R1 hacía compactar a cada paso; era también la causa de
 fondo de los bucles del R1). El explorador sigue en Qwen3.5-9B; en `opencode.json` se le declaró por fin su
-límite (32k/8k), que faltaba. Runtime MLX 1.13.1 (auto-instalado 10/10) ya respeta el contexto. R1-8B en
-disco sin alias (4,6 GB), pendiente de OK para borrar.
+límite (32k/8k), que faltaba. Runtime MLX 1.13.1 (auto-instalado 10/10) ya respeta el contexto. R1-8B
+BORRADO del disco el 19/10 con OK del operador.
