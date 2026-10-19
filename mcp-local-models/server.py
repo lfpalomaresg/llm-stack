@@ -147,7 +147,8 @@ def ask_openrouter_model(model: str, prompt: str, system: str = "") -> str:
         resp = httpx.post(
             f"{OPENROUTER_BASE_URL}/chat/completions",
             headers={"Authorization": f"Bearer {key}"},
-            json={"model": model, "messages": messages},
+            # 2026-10-19 (auditoría v6.5): mismo filtro de privacidad que los alias de LiteLLM.
+            json={"model": model, "messages": messages, "provider": {"data_collection": "deny"}},
             timeout=120,
         )
         resp.raise_for_status()

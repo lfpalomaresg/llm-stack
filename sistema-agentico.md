@@ -917,3 +917,24 @@ LiteLLM en `*:4000` sin clave; token de Telegram sin rotar; MCP `local-models` s
 0,50 $/ejecución y 5 $/mes). Pilotos: KPIs hoteleros ✅ (5,7 min, 0,04 $, ocultos en verde) y clasificador de
 averías ✅ con reserva (97,5 % limpio, 100 % sobreajustado al test). Tarea semanal: recomendada tras banco oculto
 por proyecto y cierre de los riesgos altos.
+
+## 25. Ejecución del plan v6.5 — 2026-10-19 (OK operador: "todos los pasos menos el cero")
+
+**Seguridad (paso 1, revisado por Codex: sin errores de sintaxis; huecos que señaló, cerrados):** LiteLLM solo en
+`127.0.0.1` (`stack.sh --host`; verificado: la IP de la LAN ya no conecta; Open WebUI en Docker sigue llegando);
+filtro `data_collection: deny` también en el MCP `local-models` y en la ruta de respaldo de `enrutar.sh` (solo
+cuando va directa a OpenRouter); `cloud-agentic` ya es destino de `enrutar.sh`; `local-models_*` denegado en los
+subagentes locales; `@josiefied` con 40 pasos y sin MCP; correo e iMessage denegados a TODOS los agentes de
+opencode; token de Supabase fuera de la línea de comandos del MCP (va por `environment`); fuera el proveedor
+directo `openrouter` de opencode y `ollama-launch` (`minimax-m3:cloud`) de hermes; Bearer de OmniRoute retirado de
+`~/.claude/settings.local.json` (600); `.env` de proyectos a 600. Queda: MoA de hermes (apagado), Open WebUI en
+`0.0.0.0:3000`, `--dangerously-skip-permissions` del mantenimiento nocturno. Token de Telegram: lo rota el operador.
+**Vigilante (paso 2):** `opencode-watchdog.py` + LaunchAgent cada 60 s: corta una sesión con ≥15 `stream error` o
+≥12 compactaciones en 10 min (habría cortado el bucle del 17/10 a los 16 min). 23 tests, 13 mutaciones cazadas.
+Pausa: `touch ~/.local/state/opencode-watchdog/disabled`. **Normas y memoria (paso 3):** 19 ficheros alineados
+(ver bloque de estado en `JERARQUIA_IA.md`); `@nexn2` no invoca otros subagentes hasta re-medir la RAM.
+**Laboratorio (paso 4):** banco oculto del clasificador escrito por Codex (60); repetición con las reglas aprendidas
+= **98,3 %** en el oculto (piloto: 91,7 %); `bench-continuo` con línea base; tarea semanal domingo 04:00.
+**Rodaje (5):** revisiones 26/10 y 02/11 en `PENDING_MAC`. **Mantenimiento (6):** re-medición de RAM programada
+para tras el próximo reinicio (`com.luisfran.remedir-ram`, una sola vez); triaje de Sinapsis en
+`AI_OS/REFERENCES/2026-10-19-sinapsis-triaje.md` pendiente de decisión del operador.

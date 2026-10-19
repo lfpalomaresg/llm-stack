@@ -256,7 +256,7 @@ _perfil() {  # $1 = grande a cargar (o "" para ligero)
 
 _arranca_litellm() {
   if ! curl -s -m 2 http://localhost:4000/health/liveliness >/dev/null 2>&1; then
-    nohup "$LITELLM" --config "$CFG" --port 4000 >> "$LOG" 2>&1 &
+    nohup "$LITELLM" --config "$CFG" --host 127.0.0.1 --port 4000 >> "$LOG" 2>&1 &
     echo $! > "$PIDFILE"
     echo "LiteLLM arrancando en :4000 (log: $LOG)"
   else
@@ -410,7 +410,7 @@ case "$1" in
       _unlock; trap - EXIT INT TERM
     fi
     _para_litellm; sleep 1
-    exec "$LITELLM" --config "$CFG" --port 4000 >> "$LOG" 2>&1
+    exec "$LITELLM" --config "$CFG" --host 127.0.0.1 --port 4000 >> "$LOG" 2>&1
     ;;
   stop)
     _require_lms; _lock 60 || exit 4

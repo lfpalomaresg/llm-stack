@@ -26,3 +26,6 @@ voicebox/data/
 voicebox/pruebas/
 voicebox/*.pid
 bench-mimo/*.log
+opencode-watchdog.log
+opencode-watchdog.launchd.log
+remedir-ram.launchd.log
