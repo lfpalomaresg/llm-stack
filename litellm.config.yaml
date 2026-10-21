@@ -226,6 +226,10 @@ litellm_settings:
   # NO subir este valor sin releer ese incidente.
   num_retries: 1
   request_timeout: 600
+  # 2026-10-21: registro de uso por petición (solo metadatos, nunca contenido) en
+  # ~/.local/state/litellm/uso.jsonl; lo agrega enrutador-ia/scripts/aprender.sh.
+  # El módulo vive junto a este fichero (registro_uso.py, tests en test-registro-uso.py).
+  callbacks: registro_uso.registro
 
 # SIN fallbacks (decisión 2026-08-02): si el modelo pedido no puede cargarse
 # (guardarraíl de LM Studio con otro grande en RAM), el error debe ser VISIBLE

@@ -938,3 +938,30 @@ Pausa: `touch ~/.local/state/opencode-watchdog/disabled`. **Normas y memoria (pa
 **Rodaje (5):** revisiones 26/10 y 02/11 en `PENDING_MAC`. **Mantenimiento (6):** re-medición de RAM programada
 para tras el próximo reinicio (`com.luisfran.remedir-ram`, una sola vez); triaje de Sinapsis en
 `AI_OS/REFERENCES/2026-10-19-sinapsis-triaje.md` pendiente de decisión del operador.
+
+## 26. MiniMax M3.1 Flash frente a V4.1-Flash-1017 — 2026-10-21 (sin cambios en el stack)
+
+MiniMax publicó el 19/10 **M3.1 Flash** (1 M de contexto, multimodal; API oficial 0,15/0,60 $ por millón, igual
+que la 1017; en OpenRouter solo `:free`, servida por MiniMax ⇒ **solo datos ficticios o públicos**). Pesos
+abiertos anunciados «más adelante» (prensa: 23/10), tamaño sin publicar. Medido con datos ficticios:
+
+| Prueba | MiniMax M3.1 Flash (`:free`) | DeepSeek V4.1-Flash-1017 |
+|---|---|---|
+| `bench-coder-or.py` (6 tareas con tests) | 6/6 · ~88 tok/s | 6/6 · ~118 tok/s |
+| Cotejo, banco E01-E30 del laboratorio, una llamada sin código de apoyo | **F1 1,000 · 30/30** · 6,0 s/caso · 18,3k tok · 0 $ | **F1 1,000 · 30/30** · 6,1 s/caso · 39,4k tok · 0,021 $ |
+
+**Veredicto:** empate en calidad en nuestras pruebas; MiniMax usa ~la mitad de tokens de salida. No sustituye a la
+1017 (su `:free` retiene datos y tiene límites; la de pago no está en OpenRouter). Lección colateral: un modelo
+cloud de este nivel resuelve en una llamada el banco en el que los 9B locales, con todo el andamiaje, sacan 0,69
+(laboratorio, `cotejo-arquitecturas` r4). **Disparador:** 23/10 o cuando salgan los pesos ⇒ mirar el tamaño; si cabe
+en 36 GB, bench local contra MiMo y Qwen3.5-9B. Resultados en `bench-minimax/`.
+
+## 27. Cierre de pendientes del informe v6.5 — 2026-10-21 (autorizado por el operador)
+
+| Pendiente | Qué se hizo | Verificación |
+|---|---|---|
+| Open WebUI en `0.0.0.0:3000` | Contenedor recreado con `-p 127.0.0.1:3000:8080`, misma imagen, mismo volumen `open-webui` y mismas variables | `localhost` 200 · IP de la LAN rechazada · `webui.db` intacta |
+| `--dangerously-skip-permissions` en el mantenimiento nocturno | `~/.local/bin/health-nocturno.sh` (copia `.bak.20261021`) usa `--allowedTools`/`--disallowedTools` derivados de `modo-desatendido.md`: fuera commits, push, instalaciones, brew, curl, `--purgar`, Soho y edición de skills, memoria y settings | Probado en carpeta desechable: lo permitido se ejecuta, lo prohibido se deniega sin colgar. **Ojo:** un `*` en medio va sin `:*` final (`Bash(git -C * commit*)`); con `:*` NO casa (probado) |
+| Ciclo diario de automejora ×2 | Había dos disparadores para el mismo ciclo: la tarea local de Cowork y el remoto `trig_01AehugbHbJLZp6Qoy28AwUR` creado al migrarla el 26/09 (prompts idénticos). Remoto **desactivado** (reversible) | Bitácora: dos entradas cada noche (21:01 y ~21:08); el 18/10 corrieron las dos. **Comprobar** que el 21/10 sale una sola |
+| Registro del enrutador muerto desde el 04/10 | Callback `registro_uso.py` en LiteLLM (solo metadatos, nunca contenido, fichero 600) → `~/.local/state/litellm/uso.jsonl`; `aprender.sh` añade «Tráfico LiteLLM» por alias con propuestas (≥10 peticiones y >30 % de error) | 3 tests (`test-registro-uso.py`) · petición real anotada · informe con datos sintéticos y reales |
+| MoA de hermes directo a OpenRouter | Sin cambios: está `enabled: false`; si se reactiva, revisar su filtro de proveedores | — |
