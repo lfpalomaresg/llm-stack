@@ -1,0 +1,7 @@
+== bench-vs-nex Thu Oct  1 08:17:37 CEST 2026 ==
+N2.5 = nex-n2.5-mini-optiq
+N2-mini (actual, template no-think): 6/6
+N2.5-mini (defecto: adaptativo): 5/6
+N2.5-mini (reasoning_effort=none): 5/6
+== FIN Thu Oct  1 08:20:36 CEST 2026 → /Users/pifanmac/llm-stack/bench-vs-nex/REPORT-20261001.md ==
+rc=0

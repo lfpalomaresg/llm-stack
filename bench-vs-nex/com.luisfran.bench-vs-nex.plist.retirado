@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.luisfran.bench-vs-nex</string>
+  <key>ProgramArguments</key><array><string>/bin/zsh</string><string>-c</string>
+    <string>/Users/pifanmac/llm-stack/bench-vs-nex.sh; launchctl bootout gui/$(id -u)/com.luisfran.bench-vs-nex</string></array>
+  <key>StartCalendarInterval</key><dict><key>Month</key><integer>10</integer><key>Day</key><integer>2</integer><key>Hour</key><integer>3</integer><key>Minute</key><integer>0</integer></dict>
+  <key>StandardOutPath</key><string>/Users/pifanmac/llm-stack/bench-vs-nex/launchd.out</string>
+  <key>StandardErrorPath</key><string>/Users/pifanmac/llm-stack/bench-vs-nex/launchd.err</string>
+</dict></plist>

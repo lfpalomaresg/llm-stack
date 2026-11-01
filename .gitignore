@@ -29,3 +29,6 @@ bench-mimo/*.log
 opencode-watchdog.log
 opencode-watchdog.launchd.log
 remedir-ram.launchd.log
+
+# Salidas de stint (runtime, se regeneran)
+stint-logs/
