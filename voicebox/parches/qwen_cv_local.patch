@@ -1,0 +1,41 @@
+diff --git a/backend/backends/qwen_custom_voice_backend.py b/backend/backends/qwen_custom_voice_backend.py
+index 791f800..1bb1971 100644
+--- a/backend/backends/qwen_custom_voice_backend.py
++++ b/backend/backends/qwen_custom_voice_backend.py
+@@ -15,7 +15,10 @@ Languages supported: zh, en, ja, ko, de, fr, ru, pt, es, it
+ """
+ 
+ import asyncio
++import json
+ import logging
++import os
++from pathlib import Path
+ from typing import Optional
+ 
+ import numpy as np
+@@ -54,6 +57,15 @@ QWEN_CV_HF_REPOS = {
+     "0.6B": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+ }
+ 
++# llm-stack patch (parches/qwen_cv_local.patch): VOICEBOX_QWEN_CV_1_7B=<local checkpoint dir> serves a
++# fine-tuned custom_voice checkpoint as the 1.7B CustomVoice model; its speakers (talker_config.spk_id,
++# e.g. «mia») become presets. Unset = upstream behaviour. Cloned profiles (engine «qwen») are untouched.
++_LOCAL_CV = os.environ.get("VOICEBOX_QWEN_CV_1_7B")
++if _LOCAL_CV and (Path(_LOCAL_CV) / "config.json").is_file():
++    QWEN_CV_HF_REPOS["1.7B"] = _LOCAL_CV
++    for _spk in json.loads((Path(_LOCAL_CV) / "config.json").read_text())["talker_config"]["spk_id"]:
++        QWEN_CUSTOM_VOICES.append((_spk, _spk.capitalize(), "female", "es", "Local fine-tuned voice"))
++
+ 
+ class QwenCustomVoiceBackend:
+     """Qwen3-TTS CustomVoice backend — preset speakers with instruct control."""
+@@ -77,7 +89,8 @@ class QwenCustomVoiceBackend:
+ 
+     def _is_model_cached(self, model_size: Optional[str] = None) -> bool:
+         size = model_size or self.model_size
+-        return is_model_cached(self._get_model_path(size))
++        path = self._get_model_path(size)
++        return Path(path).is_dir() or is_model_cached(path)
+ 
+     async def load_model_async(self, model_size: Optional[str] = None) -> None:
+         if model_size is None:
