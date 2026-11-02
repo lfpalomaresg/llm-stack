@@ -57,6 +57,22 @@ def normal_line(t, sid, run=RUN):
             % (iso(t), run, sid))
 
 
+def stream_line(t, sid, run=RUN, mode="subagent"):
+    return ('timestamp=%s level=INFO run=%s message=stream providerID=llm-stack '
+            'modelID=local-worker session.id=%s small=false agent=worker mode=%s'
+            % (iso(t), run, sid, mode))
+
+
+def loop_line(t, sid, step, run=RUN):
+    return ('timestamp=%s level=INFO run=%s message=loop session.id=%s step=%d'
+            % (iso(t), run, sid, step))
+
+
+def exit_line(t, sid, run=RUN):
+    return ('timestamp=%s level=INFO run=%s message="exiting loop" session.id=%s'
+            % (iso(t), run, sid))
+
+
 class FakeKiller:
     def __init__(self):
         self.calls = []
@@ -177,6 +193,54 @@ class TestCompactionLoop(Base):
                   % (iso(T0 + 10 + i), RUN)) for i in range(20)]
         self.write(lines)
         self.run_wd(now=T0 + 60)
+        self.assertEqual(self.killer.calls, [])
+        self.assertEqual(self.action_text(), "")
+
+
+class TestStepAndStall(Base):
+    def test_subagent_step_limit_triggers(self):
+        self.init()
+        self.write([stream_line(T0 + 10, "ses_steps"),
+                    loop_line(T0 + 11, "ses_steps", wd.MAX_STEPS)])
+        self.run_wd(now=T0 + 20)
+        self.assertEqual([p[0] for p in self.killer.calls], [PID])
+        self.assertIn("pasos", self.action_text())
+
+    def test_primary_step_limit_is_ignored(self):
+        self.init()
+        self.write([stream_line(T0 + 10, "ses_primary", mode="primary"),
+                    loop_line(T0 + 11, "ses_primary", 999)])
+        self.run_wd(now=T0 + 20)
+        self.assertEqual(self.killer.calls, [])
+        self.assertEqual(self.action_text(), "")
+
+    def test_subagent_below_step_limit_does_not_trigger(self):
+        self.init()
+        self.write([stream_line(T0 + 10, "ses_ok"),
+                    loop_line(T0 + 11, "ses_ok", wd.MAX_STEPS - 1)])
+        self.run_wd(now=T0 + 20)
+        self.assertEqual(self.killer.calls, [])
+        self.assertEqual(self.action_text(), "")
+
+    def test_stalled_active_subagent_triggers(self):
+        self.init()
+        self.write([stream_line(T0 + 10, "ses_stall")])
+        self.run_wd(now=T0 + 10 + wd.STALL_S + 5)
+        self.assertEqual([p[0] for p in self.killer.calls], [PID])
+        self.assertIn("sin avance", self.action_text())
+
+    def test_stalled_primary_is_not_killed(self):
+        self.init()
+        self.write([stream_line(T0 + 10, "ses_wait", mode="primary")])
+        self.run_wd(now=T0 + 10 + wd.STALL_S + 5)
+        self.assertEqual(self.killer.calls, [])
+        self.assertEqual(self.action_text(), "")
+
+    def test_finished_subagent_is_not_killed_by_stall(self):
+        self.init()
+        self.write([stream_line(T0 + 10, "ses_done"),
+                    exit_line(T0 + 20, "ses_done")])
+        self.run_wd(now=T0 + 20 + wd.STALL_S + 5)
         self.assertEqual(self.killer.calls, [])
         self.assertEqual(self.action_text(), "")
 

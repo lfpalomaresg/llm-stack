@@ -14,9 +14,17 @@ Qué hace cada ejecución (LaunchAgent cada 60 s):
        - Una línea sin '\\n' final se deja para la siguiente pasada.
   2. Ventana deslizante de 10 min por session.id (tiempo = timestamp del log):
        >= 15 `message="stream error"`  o  >= 12 `message=stream agent=compaction`.
-  3. Acción: SIGTERM al proceso opencode culpable, SIGKILL a los 10 s si sigue vivo,
+  3. Tope de pasos: si un SUBAGENTE (`mode=subagent`) llega a >= 40 pasos
+     (`message=loop ... step=N`), se corta. El primario no lleva tope aquí: puede
+     tener sesiones largas legítimas.
+  4. Bloqueo por inactividad: si un SUBAGENTE sigue activo (sin `message="exiting loop"`)
+     y lleva >= 60 min sin ninguna línea nueva, se corta. El primario puede quedarse
+     esperando al operador y no se toca.
+  5. Acción: SIGTERM al proceso opencode culpable, SIGKILL a los 10 s si sigue vivo,
      notificación macOS y línea en ~/llm-stack/opencode-watchdog.log.
-     Una vez por sesión cada 10 min. Nunca actúa sobre eventos de hace > 15 min.
+     Una vez por sesión cada 10 min. Nunca actúa sobre eventos de hace > 15 min
+     (salvo la detección de inactividad, que por definición mira al pasado).
+  Umbrales por entorno: OPENCODE_WATCHDOG_MAX_STEPS (40), OPENCODE_WATCHDOG_STALL_MIN (60).
 
 Mapeo sesión -> pid (investigado en el log real 19/10/2026):
   - `run=` es un id POR PROCESO: un proceso opencode escribe siempre el mismo run= (aunque
@@ -31,7 +39,7 @@ Mapeo sesión -> pid (investigado en el log real 19/10/2026):
     dentro del mismo proceso opencode). No se tocan sus hijos (MCP, node...): solo opencode.
 
 Uso:
-  opencode-watchdog.py            # modo normal (lo que ejecuta el LaunchAgent)
+  opencode-watchdog.sh             # modo normal (lo que ejecuta el LaunchAgent)
   opencode-watchdog.py --dry-run  # detecta y registra, no mata ni notifica
 Desactivar sin desinstalar: crear ~/.local/state/opencode-watchdog/disabled
 """
@@ -63,6 +71,10 @@ START_TOL = (-1.0, 10.0)  # primer_ts(run) - lstart admitido, en segundos
 KILL_GRACE_S = 10.0       # SIGTERM -> espera -> SIGKILL
 MAX_READ_BYTES = 64 * 1024 * 1024
 ACTED_TTL_S = 86400
+
+# Tope de pasos y de inactividad para SUBAGENTES (el primario puede esperar al operador).
+MAX_STEPS = int(os.environ.get("OPENCODE_WATCHDOG_MAX_STEPS", "40"))
+STALL_S = int(os.environ.get("OPENCODE_WATCHDOG_STALL_MIN", "60")) * 60
 
 FIELD_RE = re.compile(r'([A-Za-z0-9_.]+)=("(?:\\.|[^"\\])*"|\S*)')
 
@@ -294,21 +306,52 @@ def run_once(log_path=DEFAULT_LOG, state_path=DEFAULT_STATE, action_log_path=DEF
         run = fields.get("run")
         if run and run not in runs:
             runs[run] = ts
-        kind = classify(fields)
         sid = fields.get("session.id")
-        if kind is None or not sid:
+        if not sid:
             continue
+
         s = sessions.setdefault(sid, {"err": [], "cmp": [], "run": run})
         s["run"] = run or s.get("run")
-        s[kind].append(ts)
-        for k in ("err", "cmp"):
-            s[k] = [t for t in s[k] if t > ts - WINDOW_S]
-        n_err, n_cmp = len(s["err"]), len(s["cmp"])
-        if n_err >= ERR_THRESHOLD:
-            reason = "%d stream error en %d min" % (n_err, WINDOW_S // 60)
-        elif n_cmp >= CMP_THRESHOLD:
-            reason = "%d agent=compaction en %d min" % (n_cmp, WINDOW_S // 60)
-        else:
+        s["last"] = ts
+        msg = fields.get("message")
+        mode = fields.get("mode")
+        if mode:
+            s["mode"] = mode
+        if msg in ("process", "stream"):
+            s["active"] = True
+        elif msg == "exiting loop":
+            s["active"] = False
+        elif msg == "loop":
+            s["active"] = True
+            try:
+                step = int(fields.get("step", "0"))
+            except (TypeError, ValueError):
+                step = 0
+            if step > int(s.get("step", 0)):
+                s["step"] = step
+                s["step_ts"] = ts
+
+        reason = None
+        kind = classify(fields)
+        if kind is not None:
+            s[kind].append(ts)
+            for k in ("err", "cmp"):
+                s[k] = [t for t in s[k] if t > ts - WINDOW_S]
+            n_err, n_cmp = len(s["err"]), len(s["cmp"])
+            if n_err >= ERR_THRESHOLD:
+                reason = "%d stream error en %d min" % (n_err, WINDOW_S // 60)
+            elif n_cmp >= CMP_THRESHOLD:
+                reason = "%d agent=compaction en %d min" % (n_cmp, WINDOW_S // 60)
+
+        # Tope de pasos SOLO para subagentes: el primario puede tener sesiones largas
+        # legítimas; los subagentes son tareas acotadas y no deben pasar de MAX_STEPS.
+        if reason is None and s.get("mode") == "subagent":
+            step = int(s.get("step", 0))
+            step_ts = s.get("step_ts") or ts
+            if step >= MAX_STEPS and step_ts > now - STALE_S:
+                reason = "%d pasos (tope %d en subagente)" % (step, MAX_STEPS)
+
+        if reason is None:
             continue
         if ts < now - STALE_S:
             continue                       # evento antiguo: nunca se actúa sobre él
@@ -318,16 +361,37 @@ def run_once(log_path=DEFAULT_LOG, state_path=DEFAULT_STATE, action_log_path=DEF
         s["err"], s["cmp"] = [], []
         triggers.append((sid, s["run"], reason, ts))
 
+    # Bucles por inactividad: solo subagentes con un turno activo. El primario puede
+    # quedarse esperando al operador y NO debe cortarse.
+    for sid, s in sessions.items():
+        if s.get("mode") != "subagent" or not s.get("active"):
+            continue
+        last = s.get("last") or s.get("step_ts")
+        if last is None or now - last < STALL_S:
+            continue
+        if sid in acted and now - acted[sid] < COOLDOWN_S:
+            continue
+        acted[sid] = now
+        triggers.append((sid, s.get("run"),
+                         "sin avance %d min (subagente)" % (STALL_S // 60), last))
+
     for sid, run, reason, ev_ts in triggers:
         result = act(sid, run, reason, ev_ts, log_path, runs, dry_run, now, killer, notifier,
                      proc_lister, holds_log, killed_runs)
         append_action(action_log_path, result)
         print(result, file=out)
+        # Tras un corte real, el subagente deja de estar "activo": así no se reintenta
+        # la detección por inactividad cada 10 min sobre un pid que ya no existe.
+        if sid in sessions and 'accion="SIGTERM' in result:
+            sessions[sid]["active"] = False
 
     # Poda del estado
     ref = max(last_ts or now, now)
+    keep_s = max(WINDOW_S, STALL_S)
     sessions = {k: v for k, v in sessions.items()
-                if any(t > ref - WINDOW_S for t in v.get("err", []) + v.get("cmp", []))}
+                if v.get("active")
+                or (v.get("last") or 0) > ref - keep_s
+                or any(t > ref - WINDOW_S for t in v.get("err", []) + v.get("cmp", []))}
     acted = {k: v for k, v in acted.items() if v > ref - ACTED_TTL_S}
     live_runs = {v.get("run") for v in sessions.values()}
     runs = {k: v for k, v in runs.items() if k in live_runs or v > ref - 7 * 86400}
