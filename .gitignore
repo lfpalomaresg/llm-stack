@@ -32,3 +32,7 @@ remedir-ram.launchd.log
 
 # Salidas de stint (runtime, se regeneran)
 stint-logs/
+
+# Bancos de modelos: imágenes regenerables y código escrito por los modelos (04/11)
+bench-minimax/nov/imagenes/
+bench-minimax/agente/runs/
