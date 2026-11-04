@@ -14,6 +14,14 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 2026-11-04 (OK operador): sin ningún proceso opencode no hay nada que vigilar ⇒ salir
+# sin arrancar Python. Solo en la pasada automática (sin argumentos): --dry-run y los
+# tests siguen corriendo siempre. Las líneas de log pendientes se leen en la siguiente
+# pasada con opencode vivo (el offset no avanza mientras tanto).
+if [ "$#" -eq 0 ] && ! /usr/bin/pgrep -x opencode >/dev/null 2>&1; then
+    exit 0
+fi
 PY="/usr/bin/python3"
 if [ ! -x "$PY" ]; then
     PY="$(command -v python3 || true)"

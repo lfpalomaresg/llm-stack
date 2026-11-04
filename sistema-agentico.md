@@ -1,4 +1,39 @@
-# Sistema Agéntico Local — Mac M4 Max · v5.4
+# Sistema Agéntico Local — Mac M4 Max
+
+## Estado actual (2026-11-04) — leer esto primero
+
+> Las secciones §1-§27 de abajo son el **diario histórico** (v5.4 en adelante): describen
+> modelos ya retirados (Qwen3.6-35B, Coder-30B, R1-8B, Qwen3-8B). La verdad operativa es
+> esta tabla, `litellm.config.yaml` (qué sirve cada alias) y la cabecera de `stack.sh` (perfiles).
+
+**Arranque:** LM Studio arranca sin modelos. El daemon (`com.luisfran.llm-stack`, con
+`EXPLORADOR_EN_FRIO=0`) ya no carga el explorador en frío: todo entra **JIT** al primer uso
+(TTL 1 h, ctx 24k por defecto, 32k para el explorador). Regla de siempre: nunca dos grandes a la vez.
+
+| Alias | Modelo | Disco | Uso real (registro LM Studio) |
+|---|---|---|---|
+| `local-fast` | Qwen3.5-9B MLX (explorador) | 6 GB | Supply (lector local), bot, perfil voz |
+| `local-worker` | MiMo-V2.6-Distill-Qwen-9B | 7 GB | el más usado en octubre |
+| `local-general` · `local-coder` | Nex-N2-mini 35B-A3B | 20 GB | orquestación/código |
+| `local-auditor` | Gemma-4-E4B | 6,5 GB | careo local (rutina) y material sensible |
+| `local-reasoner` | gpt-oss-20b | 12 GB | careo local, revisor principal (rutina y duro) |
+| `local-reviewer-ms` | Phi-4-reasoning-plus | 8 GB | careo local `--duro` y suplente |
+| `local-uncensored` | Josiefied-Qwen3-30B-A3B | 17 GB | auditoría de código, red-team de seguridad, round de automejora |
+| `local-embed` | Qwen3-Embedding-0.6B | 0,6 GB | embeddings |
+| `gpt-oss-free` · `auditor-free` | gpt-oss-120B vía agy-bridge (:4010) | — | nube gratis |
+| `cloud-agentic` · `cloud-coder-value` · `cloud-megacontext` · `cloud-reasoning` | DeepSeek-V4.1-Flash-1017 (OpenRouter) | — | primario de opencode y Hermes |
+| `cloud-coder` · `cloud-coder-flash` | GLM-5.3 / GLM-5.3-flash | — | código en la nube |
+| `cloud-megacontext-max` | Kimi-K3 | — | contexto enorme |
+| `cloud-vision` | MiniMax-M3 | — | visión |
+| `cloud-pro-legacy` | DeepSeek-V4-pro | — | legado |
+
+**Lección del 2026-11-04:** el registro de `enrutador-ia` (`~/.local/state/enrutador-ia/registro.jsonl`)
+**no ve** las llamadas directas a LiteLLM (careo-local.py, auditar-codigo.py, security-audit.py,
+round-automejora.sh, opencode). Para medir el uso real de un modelo, contar
+`Running chat completion` por modelo en `~/.lmstudio/server-logs/`. Ver §28.
+
+---
+
 
 > Registro canónico de la estructura agéntica sobre el LLM Stack v5.
 > Creado 2026-08-21 tras la revisión con llmfit y los tests de estrés.
@@ -965,3 +1000,20 @@ en 36 GB, bench local contra MiMo y Qwen3.5-9B. Resultados en `bench-minimax/`.
 | Ciclo diario de automejora ×2 | Había dos disparadores para el mismo ciclo: la tarea local de Cowork y el remoto `trig_01AehugbHbJLZp6Qoy28AwUR` creado al migrarla el 26/09 (prompts idénticos). Remoto **desactivado** (reversible) | Bitácora: dos entradas cada noche (21:01 y ~21:08); el 18/10 corrieron las dos. **Comprobar** que el 21/10 sale una sola |
 | Registro del enrutador muerto desde el 04/10 | Callback `registro_uso.py` en LiteLLM (solo metadatos, nunca contenido, fichero 600) → `~/.local/state/litellm/uso.jsonl`; `aprender.sh` añade «Tráfico LiteLLM» por alias con propuestas (≥10 peticiones y >30 % de error) | 3 tests (`test-registro-uso.py`) · petición real anotada · informe con datos sintéticos y reales |
 | MoA de hermes directo a OpenRouter | Sin cambios: está `enabled: false`; si se reactiva, revisar su filtro de proveedores | — |
+
+## 28. Arranque ligero y limpieza — 2026-11-04 (OK operador)
+
+- Daemon del stack sin carga en frío (`EXPLORADOR_EN_FRIO=0` en el plist; reversible quitando la variable).
+- Retirado del disco (a la Papelera, recuperable hasta vaciarla): carpeta huérfana
+  `mlx-community/Nex-N2-mini-4bit` (un solo shard, 5 GB, LM Studio no la listaba) y `~/.ollama/models`
+  (llama3.2-3b + stub de minimax-m3; Ollama ya no arranca y nada del stack lo usa).
+- Se propuso retirar gpt-oss-20b, Phi-4 y Josiefied por "sin uso" según el registro del enrutador.
+  **Error de medición:** LM Studio registra Josiefied 82 llamadas en octubre y 46 en noviembre,
+  gpt-oss-20b 16 y Phi-4 4 en octubre (careo local y auditorías). Se devolvieron a su sitio en la
+  misma sesión; alias intactos.
+- Agentes: desactivados `mia-b6-programar` y `tablewise-monday-summary` (tareas de una vez ya
+  cumplidas, plist en `~/Library/LaunchAgents.desactivados/`); `opencode-watchdog.sh` sale sin arrancar
+  Python si no hay proceso opencode (29/29 tests OK).
+- Oracle (pull, contexto, restic) falla desde el 2026-11-03 noche porque Tailscale está desconectado
+  (`WantRunning=false`). Último restic OK: 2026-11-03. Lo reactiva el operador.
+- Referencia con reversión: `AI_OS/REFERENCES/arranque-mac-ligero-2026-11-04.md`.

@@ -402,7 +402,12 @@ case "$1" in
       # opencode, enrutar y el bot de Telegram). NO se carga Nex: hermes y opencode van en
       # DeepSeek-V4-Pro (cloud). Nunca desaloja nada: un reinicio de LiteLLM no debe tocar
       # lo que esté en uso (careo 2026-08-05).
-      if _loaded "$FAST"; then
+      # 2026-11-04 (OK operador): EXPLORADOR_EN_FRIO=0 (lo fija el LaunchAgent) salta la carga en
+      # frío; LM Studio lo carga bajo demanda (JIT, TTL 1 h, ctx 24k por defecto). Sin la variable
+      # el comportamiento es el de siempre. Revertir = quitar la variable del plist.
+      if [ "${EXPLORADOR_EN_FRIO:-1}" = "0" ]; then
+        echo "Arranque en frío SIN explorador (EXPLORADOR_EN_FRIO=0): se cargará bajo demanda"
+      elif _loaded "$FAST"; then
         echo "Explorador ya residente: no toco la RAM"
       else
         _cargar "$FAST" 32768 0 && echo "Arranque en frío: explorador residente cargado"
