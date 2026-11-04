@@ -1015,7 +1015,8 @@ en 36 GB, bench local contra MiMo y Qwen3.5-9B. Resultados en `bench-minimax/`.
   cumplidas, plist en `~/Library/LaunchAgents.desactivados/`); `opencode-watchdog.sh` sale sin arrancar
   Python si no hay proceso opencode (29/29 tests OK).
 - Oracle (pull, contexto, restic) falla desde el 2026-11-03 noche porque Tailscale está desconectado
-  (`WantRunning=false`). Último restic OK: 2026-11-03. Lo reactiva el operador.
+  (`WantRunning=false`). Último restic OK: 2026-11-03. **Resuelto el 04/11:** el operador reconectó Tailscale;
+  pull, contexto y restic relanzados y en verde (snapshot `9bc4c346`).
 - Referencia con reversión: `AI_OS/REFERENCES/arranque-mac-ligero-2026-11-04.md`.
 
 ## 29. MiniMax M3.1 Flash de pago frente a M3 y V4.1-Flash-1017 — 2026-11-04 (aplicado: `cloud-vision` → M3.1 Flash)
