@@ -1,0 +1,36 @@
+# 2026-11-04 20:55
+
+deepseek/deepseek-v4.1-flash-1017 [auto] COTEJO: F1 0.978 · precisión 1.000 · cobertura 0.957 · exactos 29/30 · sin respuesta 1 · 9.9 s/caso · salida 53238 tok · 0.0282 $
+
+```
+E01 OK  4.1s Cohere esperado=[] obtenido=[]
+E02 OK  4.5s InferenceNet esperado=[] obtenido=[]
+E03 OK  3.0s InferenceNet esperado=[] obtenido=[]
+E04 OK  5.5s Relace esperado=[] obtenido=[]
+E05 OK  4.7s Wafer esperado=[] obtenido=[]
+E06 OK  5.4s InferenceNet esperado=[] obtenido=[]
+E07 OK  2.7s Cohere esperado=[] obtenido=[]
+E08 OK  2.3s Cohere esperado=[] obtenido=[]
+E09 OK  4.9s Together esperado=[] obtenido=[]
+E10 OK  5.4s StepFun esperado=[] obtenido=[]
+E11 OK  6.0s DigitalOcean esperado=[] obtenido=[]
+E12 OK  4.6s StepFun esperado=[] obtenido=[]
+E13 OK  16.1s Sail Research esperado=[('P2', 'cantidad')] obtenido=[('P2', 'cantidad')]
+E14 OK  14.9s Sail Research esperado=[('P1', 'precio')] obtenido=[('P1', 'precio')]
+E15 OK  5.7s Cohere esperado=[('P1', 'precio')] obtenido=[('P1', 'precio')]
+E16 OK  9.3s InferenceNet esperado=[('P2', 'no_recibido')] obtenido=[('P2', 'no_recibido')]
+E17 MAL 40.2s Sail Research esperado=[('EXTRA', 'no_pedido')] obtenido=[]
+E18 OK  7.7s Wafer esperado=[('P2', 'precio')] obtenido=[('P2', 'precio')]
+E19 OK  6.7s Sail Research esperado=[('P1', 'cantidad')] obtenido=[('P1', 'cantidad')]
+E20 OK  12.0s ModelRun esperado=[('P2', 'no_recibido')] obtenido=[('P2', 'no_recibido')]
+E21 OK  30.6s Modal esperado=[('EXTRA', 'no_pedido'), ('P1', 'precio')] obtenido=[('EXTRA', 'no_pedido'), ('P1', 'precio')]
+E22 OK  6.5s Wafer esperado=[('P1', 'cantidad'), ('P1', 'precio')] obtenido=[('P1', 'cantidad'), ('P1', 'precio')]
+E23 OK  15.0s Sail Research esperado=[('EXTRA', 'no_pedido'), ('P2', 'no_recibido')] obtenido=[('EXTRA', 'no_pedido'), ('P2', 'no_recibido')]
+E24 OK  5.2s Wafer esperado=[('P1', 'cantidad')] obtenido=[('P1', 'cantidad')]
+E25 OK  9.8s Cohere esperado=[('P3', 'no_recibido')] obtenido=[('P3', 'no_recibido')]
+E26 OK  6.8s InferenceNet esperado=[('P2', 'precio')] obtenido=[('P2', 'precio')]
+E27 OK  11.5s Relace esperado=[('EXTRA', 'no_pedido'), ('P3', 'cantidad')] obtenido=[('EXTRA', 'no_pedido'), ('P3', 'cantidad')]
+E28 OK  15.6s Particle AI esperado=[('P2', 'no_recibido'), ('P2', 'precio')] obtenido=[('P2', 'no_recibido'), ('P2', 'precio')]
+E29 OK  3.5s Together esperado=[('P3', 'precio')] obtenido=[('P3', 'precio')]
+E30 OK  28.1s Relace esperado=[('EXTRA', 'no_pedido')] obtenido=[('EXTRA', 'no_pedido')]
+```

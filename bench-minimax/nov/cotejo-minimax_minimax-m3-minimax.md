@@ -1,0 +1,36 @@
+# 2026-11-04 19:40
+
+minimax/minimax-m3 [minimax] COTEJO: F1 0.939 · precisión 0.885 · cobertura 1.000 · exactos 27/30 · sin respuesta 0 · 6.1 s/caso · salida 26028 tok · 0.0367 $
+
+```
+E01 OK  6.1s Minimax esperado=[] obtenido=[]
+E02 OK  2.1s Minimax esperado=[] obtenido=[]
+E03 OK  5.0s Minimax esperado=[] obtenido=[]
+E04 OK  1.9s Minimax esperado=[] obtenido=[]
+E05 OK  26.7s Minimax esperado=[] obtenido=[]
+E06 OK  1.6s Minimax esperado=[] obtenido=[]
+E07 OK  1.6s Minimax esperado=[] obtenido=[]
+E08 OK  2.0s Minimax esperado=[] obtenido=[]
+E09 OK  3.8s Minimax esperado=[] obtenido=[]
+E10 OK  2.5s Minimax esperado=[] obtenido=[]
+E11 OK  6.7s Minimax esperado=[] obtenido=[]
+E12 OK  1.0s Minimax esperado=[] obtenido=[]
+E13 MAL 23.8s Minimax esperado=[('P2', 'cantidad')] obtenido=[('P1', 'precio'), ('P2', 'cantidad')]
+E14 OK  19.3s Minimax esperado=[('P1', 'precio')] obtenido=[('P1', 'precio')]
+E15 OK  4.1s Minimax esperado=[('P1', 'precio')] obtenido=[('P1', 'precio')]
+E16 OK  4.9s Minimax esperado=[('P2', 'no_recibido')] obtenido=[('P2', 'no_recibido')]
+E17 OK  4.8s Minimax esperado=[('EXTRA', 'no_pedido')] obtenido=[('EXTRA', 'no_pedido')]
+E18 OK  2.7s Minimax esperado=[('P2', 'precio')] obtenido=[('P2', 'precio')]
+E19 OK  3.1s Minimax esperado=[('P1', 'cantidad')] obtenido=[('P1', 'cantidad')]
+E20 OK  4.6s Minimax esperado=[('P2', 'no_recibido')] obtenido=[('P2', 'no_recibido')]
+E21 OK  3.4s Minimax esperado=[('EXTRA', 'no_pedido'), ('P1', 'precio')] obtenido=[('EXTRA', 'no_pedido'), ('P1', 'precio')]
+E22 OK  7.3s Minimax esperado=[('P1', 'cantidad'), ('P1', 'precio')] obtenido=[('P1', 'cantidad'), ('P1', 'precio')]
+E23 OK  5.6s Minimax esperado=[('EXTRA', 'no_pedido'), ('P2', 'no_recibido')] obtenido=[('EXTRA', 'no_pedido'), ('P2', 'no_recibido')]
+E24 OK  2.4s Minimax esperado=[('P1', 'cantidad')] obtenido=[('P1', 'cantidad')]
+E25 MAL 6.7s Minimax esperado=[('P3', 'no_recibido')] obtenido=[('P1', 'precio'), ('P3', 'no_recibido')]
+E26 OK  2.2s Minimax esperado=[('P2', 'precio')] obtenido=[('P2', 'precio')]
+E27 OK  6.2s Minimax esperado=[('EXTRA', 'no_pedido'), ('P3', 'cantidad')] obtenido=[('EXTRA', 'no_pedido'), ('P3', 'cantidad')]
+E28 OK  11.9s Minimax esperado=[('P2', 'no_recibido'), ('P2', 'precio')] obtenido=[('P2', 'no_recibido'), ('P2', 'precio')]
+E29 OK  2.4s Minimax esperado=[('P3', 'precio')] obtenido=[('P3', 'precio')]
+E30 MAL 5.7s Minimax esperado=[('EXTRA', 'no_pedido')] obtenido=[('EXTRA', 'no_pedido'), ('P1', 'precio')]
+```

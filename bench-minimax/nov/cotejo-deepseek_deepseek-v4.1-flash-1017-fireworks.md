@@ -1,0 +1,36 @@
+# 2026-11-04 20:55
+
+deepseek/deepseek-v4.1-flash-1017 [fireworks] COTEJO: F1 1.000 · precisión 1.000 · cobertura 1.000 · exactos 30/30 · sin respuesta 0 · 10.1 s/caso · salida 46922 tok · 0.0614 $
+
+```
+E01 OK  14.1s Fireworks esperado=[] obtenido=[]
+E02 OK  4.1s Fireworks esperado=[] obtenido=[]
+E03 OK  9.1s Fireworks esperado=[] obtenido=[]
+E04 OK  7.0s Fireworks esperado=[] obtenido=[]
+E05 OK  8.3s Fireworks esperado=[] obtenido=[]
+E06 OK  6.9s Fireworks esperado=[] obtenido=[]
+E07 OK  3.7s Fireworks esperado=[] obtenido=[]
+E08 OK  5.0s Fireworks esperado=[] obtenido=[]
+E09 OK  5.3s Fireworks esperado=[] obtenido=[]
+E10 OK  6.0s Fireworks esperado=[] obtenido=[]
+E11 OK  5.9s Fireworks esperado=[] obtenido=[]
+E12 OK  3.7s Fireworks esperado=[] obtenido=[]
+E13 OK  8.8s Fireworks esperado=[('P2', 'cantidad')] obtenido=[('P2', 'cantidad')]
+E14 OK  13.5s Fireworks esperado=[('P1', 'precio')] obtenido=[('P1', 'precio')]
+E15 OK  15.2s Fireworks esperado=[('P1', 'precio')] obtenido=[('P1', 'precio')]
+E16 OK  8.8s Fireworks esperado=[('P2', 'no_recibido')] obtenido=[('P2', 'no_recibido')]
+E17 OK  12.9s Fireworks esperado=[('EXTRA', 'no_pedido')] obtenido=[('EXTRA', 'no_pedido')]
+E18 OK  6.1s Fireworks esperado=[('P2', 'precio')] obtenido=[('P2', 'precio')]
+E19 OK  6.3s Fireworks esperado=[('P1', 'cantidad')] obtenido=[('P1', 'cantidad')]
+E20 OK  7.4s Fireworks esperado=[('P2', 'no_recibido')] obtenido=[('P2', 'no_recibido')]
+E21 OK  20.4s Fireworks esperado=[('EXTRA', 'no_pedido'), ('P1', 'precio')] obtenido=[('EXTRA', 'no_pedido'), ('P1', 'precio')]
+E22 OK  6.9s Fireworks esperado=[('P1', 'cantidad'), ('P1', 'precio')] obtenido=[('P1', 'cantidad'), ('P1', 'precio')]
+E23 OK  18.8s Fireworks esperado=[('EXTRA', 'no_pedido'), ('P2', 'no_recibido')] obtenido=[('EXTRA', 'no_pedido'), ('P2', 'no_recibido')]
+E24 OK  11.0s Fireworks esperado=[('P1', 'cantidad')] obtenido=[('P1', 'cantidad')]
+E25 OK  14.9s Fireworks esperado=[('P3', 'no_recibido')] obtenido=[('P3', 'no_recibido')]
+E26 OK  6.4s Fireworks esperado=[('P2', 'precio')] obtenido=[('P2', 'precio')]
+E27 OK  20.3s Fireworks esperado=[('EXTRA', 'no_pedido'), ('P3', 'cantidad')] obtenido=[('EXTRA', 'no_pedido'), ('P3', 'cantidad')]
+E28 OK  14.2s Fireworks esperado=[('P2', 'no_recibido'), ('P2', 'precio')] obtenido=[('P2', 'no_recibido'), ('P2', 'precio')]
+E29 OK  11.0s Fireworks esperado=[('P3', 'precio')] obtenido=[('P3', 'precio')]
+E30 OK  20.4s Fireworks esperado=[('EXTRA', 'no_pedido')] obtenido=[('EXTRA', 'no_pedido')]
+```

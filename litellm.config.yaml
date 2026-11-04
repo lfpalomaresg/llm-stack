@@ -211,10 +211,15 @@ model_list:
 
   - model_name: cloud-vision
     litellm_params:
-      model: openrouter/minimax/minimax-m3     # $0.30/$1.20 por M · 1M ctx
+      # 2026-11-04 (OK operador): M3 → M3.1 Flash. Bench §29: visión igual, cotejo 30/30 (M3 27/30).
+      # 0,15/0,60 $ por M (0,075/0,30 de 15:00 a 01:00 UTC en MiniMax) · 1M ctx · texto+imagen+vídeo.
+      # Fijado a MiniMax: sin `order`, OpenRouter elegía hosts fp8/fp4 más baratos.
+      model: openrouter/minimax/minimax-m3.1-flash
       api_key: os.environ/OPENROUTER_API_KEY
       extra_body:
         provider:
+          order: [minimax]
+          allow_fallbacks: false
           data_collection: deny
 
 litellm_settings:

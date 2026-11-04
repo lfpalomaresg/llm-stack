@@ -24,7 +24,7 @@
 | `cloud-agentic` · `cloud-coder-value` · `cloud-megacontext` · `cloud-reasoning` | DeepSeek-V4.1-Flash-1017 (OpenRouter) | — | primario de opencode y Hermes |
 | `cloud-coder` · `cloud-coder-flash` | GLM-5.3 / GLM-5.3-flash | — | código en la nube |
 | `cloud-megacontext-max` | Kimi-K3 | — | contexto enorme |
-| `cloud-vision` | MiniMax-M3 | — | visión |
+| `cloud-vision` | MiniMax M3.1 Flash (fijado a MiniMax, desde 04/11) | — | visión |
 | `cloud-pro-legacy` | DeepSeek-V4-pro | — | legado |
 
 **Lección del 2026-11-04:** el registro de `enrutador-ia` (`~/.local/state/enrutador-ia/registro.jsonl`)
@@ -1017,3 +1017,44 @@ en 36 GB, bench local contra MiMo y Qwen3.5-9B. Resultados en `bench-minimax/`.
 - Oracle (pull, contexto, restic) falla desde el 2026-11-03 noche porque Tailscale está desconectado
   (`WantRunning=false`). Último restic OK: 2026-11-03. Lo reactiva el operador.
 - Referencia con reversión: `AI_OS/REFERENCES/arranque-mac-ligero-2026-11-04.md`.
+
+## 29. MiniMax M3.1 Flash de pago frente a M3 y V4.1-Flash-1017 — 2026-11-04 (aplicado: `cloud-vision` → M3.1 Flash)
+
+Precio real de M3.1 Flash: **0,15/0,60 $ por millón** (tarifa oficial plana desde el 19/10, sin promoción). El 0,075/0,30
+que muestra OpenRouter es una tarifa por franja solo en el proveedor MiniMax (15:00–01:00 UTC). Acepta texto, imagen y vídeo.
+El proveedor MiniMax en OpenRouter acepta `data_collection: deny`. Ojo: el alias `cloud-vision` actual (M3, sin `order`)
+lo enruta OpenRouter al más barato (deepinfra fp8 o coreweave fp4), no a MiniMax.
+
+Datos ficticios (banco oculto de `cotejo-arquitecturas`), ambos MiniMax fijados al proveedor `minimax`:
+
+| Prueba | M3.1 Flash | MiniMax-M3 | DeepSeek V4.1-Flash-1017 |
+|---|---|---|---|
+| Visión: 60 fotos degradadas de albaranes y facturas, 920 campos | 100 % (1 fallo era del banco: precio 0,125 impreso como 0,13) · 3,3 s/doc · 0,016 $ | 100 % (mismo fallo del banco) · 3,4 s/doc · 0,062 $ | — (sin visión) |
+| Cotejo E01-E30, una llamada | **F1 1,000 · 30/30** · 5,4 s · 19,4k tok · 0,007 $ | F1 0,939 · 27/30 (3 «precio» falsos en P1) · 6,1 s · 0,037 $ | F1 0,978 · 29/30 (E17 sin respuesta, 41 s) · 9,6 s · 54,5k tok · 0,026 $ |
+| `bench-coder-or.py` (OR_PROVIDER=minimax), 3 pasadas | 17/18 (C6 falló 1 de 3) | — | 6/6 (21/10) |
+
+**Lectura:** el banco de visión está saturado (documentos impresos limpios): no distingue entre los dos, solo
+confirma que Flash lee igual que M3. Los costes se midieron en la franja barata (~17:40 UTC): fuera de ella, Flash cuesta la mitad que M3, no la cuarta parte. Para discriminar haría falta un banco más duro (manuscrito,
+arrugas, tickets). Scripts y salidas: `bench-minimax/bench-nov.py`, `bench-minimax/nov/`. `bench-coder-or.py` admite
+ahora `OR_PROVIDER` (copia `.bak.20261104`).
+
+**Aplicado (OK operador, 04/11):** `cloud-vision` = `openrouter/minimax/minimax-m3.1-flash` con `order: [minimax]`, `allow_fallbacks: false`, `data_collection: deny` (copias `.bak.20261104-vision` de `litellm.config.yaml`, `opencode-models.yaml`, `index.html` y `stack-agentico.html`). opencode regenerado sin drift. LiteLLM reiniciado (`launchctl kickstart -k`). Prueba por el alias con una factura ficticia: número y total correctos (481,21 €).
+
+### 29 bis. ¿Sustituir DeepSeek V4.1-Flash-1017 por M3.1 Flash en los alias de texto? — No (04/11)
+
+**DeepSeek no se puede fijar a DeepSeek:** su servidor entrena con datos de pago y la cuenta de OpenRouter lo bloquea
+(«Paid model training violation»; también lo quita `data_collection: deny`). Se comparó DeepSeek **tal cual lo usan
+los alias** (sin `order`, con `deny`: lo sirven Fireworks, OpenInference, StepFun, Wafer, Sail Research…) y fijado a
+**Fireworks**. M3.1 Flash, fijado a MiniMax. Todo con `data_collection: deny` y datos ficticios.
+
+| Prueba | M3.1 Flash | DeepSeek (auto, como hoy) | DeepSeek (Fireworks) |
+|---|---|---|---|
+| Agente con herramientas (`bench-agente.py`: 3 proyectos con fallos × 3) | 8/9 · 37 s/tarea · 32k tok salida · 0,012 $ · 0 tool inválidas · el fallo: dio por terminado con tests en rojo | **9/9** · 19 s · 11k tok · 0,009 $ · 0 inválidas | 8/9 · 19 s · 13k tok · 0,024 $ · el fallo: 3 errores de API de Fireworks |
+| Cotejo E01-E30 (2 pasadas Flash) | 30/30 y 29/30 · ~5 s · ~18k tok | 29/30 (E17 sin respuesta en Sail Research fp4, 40 s) · 10 s · 53k tok · 0,028 $ | 30/30 · 10 s · 47k tok · 0,061 $ |
+| `bench-coder-or.py` × 3 | 17/18 | **18/18** | **18/18** |
+
+**Veredicto:** se queda DeepSeek en los alias de texto. En lo que más hace (agente y código) iguala o gana, va el doble de
+rápido en el bucle de herramientas y cuesta menos; M3.1 Flash solo gana en el cotejo de una llamada (⅓ de tokens, el doble de
+rápido). M3.1 Flash se queda en `cloud-vision`. Nota: con `auto`, a veces toca un host fp4 lento (E17); no compensa fijar
+Fireworks (×2-3 de coste y errores de API). `bench-nov.py`, `bench-agente.py` y `bench-coder-or.py` mandan ya
+`data_collection: deny` siempre. Resultados en `bench-minimax/agente/` y `bench-minimax/nov/`.

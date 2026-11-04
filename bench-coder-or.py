@@ -8,8 +8,12 @@ KEY = os.environ["OPENROUTER_KEY"]
 API = "https://openrouter.ai/api/v1/chat/completions"
 
 def call(prompt, maxtok=6000):
-    payload = json.dumps({"model": MODEL, "temperature": 0.2, "max_tokens": maxtok,
-        "messages": [{"role": "user", "content": prompt}]}).encode()
+    body = {"model": MODEL, "temperature": 0.2, "max_tokens": maxtok,
+        "messages": [{"role": "user", "content": prompt}]}
+    body["provider"] = {"data_collection": "deny"}  # 04/11: como los alias de LiteLLM
+    if os.environ.get("OR_PROVIDER"):  # 04/11: fijar proveedor (p. ej. minimax) sin plan B
+        body["provider"].update(order=[os.environ["OR_PROVIDER"]], allow_fallbacks=False)
+    payload = json.dumps(body).encode()
     t0 = time.time()
     req = urllib.request.Request(API, data=payload, headers={
         "Content-Type": "application/json", "Authorization": f"Bearer {KEY}"})
