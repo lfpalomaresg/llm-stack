@@ -179,6 +179,13 @@ model_list:
   # conocimiento factual (SimpleQA -13), contexto largo (LongBench-V2 -6) y multilingüe. Por eso
   # hermes (conversación) y megacontext (documentos largos) SIGUEN en V4-Pro. Entrada 5-15x más barata.
   # data_collection=deny: OpenRouter solo enruta a proveedores que no retienen ni entrenan con datos.
+  # 2026-11-04 (Fase 1, OK operador): alias PARALELO para probar OpenAI. NO sustituye cloud-agentic.
+  # Revertir = borrar este bloque. Fase 2 (repuntar cloud-agentic) = cambiar solo el model: de cloud-agentic.
+  - model_name: cloud-openai
+    litellm_params:
+      model: openai/gpt-5.4-mini
+      api_key: os.environ/OPENAI_API_KEY
+
   - model_name: cloud-agentic
     litellm_params:
       # 2026-10-18 (OK operador): -> V4.1-Flash-1017 tras A/B en opencode (11/11 los 3 brazos; 1017 = mitad de coste que 0910, ~3x mas rapido que V4-Pro)

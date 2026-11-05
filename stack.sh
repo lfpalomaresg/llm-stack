@@ -277,11 +277,24 @@ _clave_openrouter() {
   [ -n "$k" ] && export OPENROUTER_API_KEY="$k"
 }
 
+_clave_openai() {
+  # API key de OpenAI (platform.openai.com), NO el OAuth de ChatGPT de auth.json.
+  # Fuente: $OPENAI_API_KEY del entorno o fichero local ~/.config/llm-stack/openai.key (chmod 600).
+  local k
+  [ -n "${OPENAI_API_KEY:-}" ] && return 0
+  if [ -f "$HOME/.config/llm-stack/openai.key" ]; then
+    k=$(tr -d '[:space:]' < "$HOME/.config/llm-stack/openai.key" 2>/dev/null)
+    [ -n "$k" ] && export OPENAI_API_KEY="$k"
+  fi
+  return 0
+}
+
 case "$1" in
   start)
     _require_lms; _lock 60 || exit 4
     lms server start --port 1234 >/dev/null 2>&1
     _clave_openrouter
+    _clave_openai
     [ -z "${OPENROUTER_API_KEY:-}" ] && echo "⚠️  Sin clave OpenRouter: los alias cloud-* fallarán."
     _arranca_litellm
     _desalojar_intrusos start && _cargar "$FAST" 32768 0 && echo "Stack arrancado: explorador residente (perfil AGENTE)"
@@ -397,6 +410,7 @@ case "$1" in
     _require_lms
     lms server start --port 1234 >/dev/null 2>&1
     _clave_openrouter
+    _clave_openai
     if _lock 30; then
       # 2026-09-15 (opción b): en frío solo se garantiza el explorador residente (lo usan
       # opencode, enrutar y el bot de Telegram). NO se carga Nex: hermes y opencode van en
