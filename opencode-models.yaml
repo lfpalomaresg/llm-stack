@@ -96,6 +96,12 @@ cloud-agentic:
   reasoning: true
   limit: { context: 1000000, output: 128000 }
 
+cloud-openai:
+  name: "OpenAI gpt-5.4-mini · Fase 1 A/B (paralelo, NO primario)"
+  tool_call: true
+  reasoning: true
+  limit: { context: 272000, output: 128000 }
+
 cloud-megacontext:
   name: "DeepSeek-V4.1-Flash-1017 · contexto gigante (1M)"
   tool_call: true
